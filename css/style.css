@@ -1,0 +1,139 @@
+/* ===== Biến màu: đổi 1 chỗ, ăn cả web =====
+   Tỉ lệ tương phản đã đo theo WCAG (chuẩn AA = 4.5:1, AAA = 7:1 cho chữ;
+   3:1 cho viền/focus). Nếu đổi màu, giữ cho mọi cặp chữ/nền >= 7:1.
+   - Tương phản cao: chữ vàng/nền đen 14.7:1, viền focus/nền 13.7:1
+   - Sáng: chữ đen/nền kem 16.3:1, viền focus/nền 6.2:1 */
+:root {
+  --nen: #FAF7F0;        /* nền kem dịu, đỡ chói hơn trắng tinh */
+  --chu: #1A1A1A;
+  --nen-nut: #FFFFFF;
+  --vien: #1A1A1A;
+  --focus: #0055CC;
+  --nen-focus: #E6F0FF;
+}
+
+/* Chế độ tương phản cao: nền đen chữ vàng (mặc định) */
+body.tuong-phan-cao {
+  --nen: #000000;
+  --chu: #FFD400;
+  --nen-nut: #000000;
+  --vien: #FFD400;
+  --focus: #00E5FF;
+  --nen-focus: #1A1A00;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  line-height: 1.7;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+  background: var(--nen);
+  color: var(--chu);
+}
+
+h1 {
+  font-size: 34px;
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 28px;
+}
+
+/* Tiêu đề nhận focus khi chuyển màn hình: không cần viền quanh nó */
+h1:focus,
+h2:focus {
+  outline: none;
+}
+
+/* Nút bấm */
+button {
+  font-family: inherit;
+  font-size: 20px;
+  padding: 12px 18px;
+  margin: 6px 6px 6px 0;
+  border: 3px solid var(--vien);
+  border-radius: 12px;
+  background: var(--nen-nut);
+  color: var(--chu);
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--nen-focus);
+}
+
+button:focus {
+  outline: 5px solid var(--focus);
+  outline-offset: 3px;
+  background: var(--nen-focus);
+}
+
+/* Danh sách bộ từ */
+.danh-sach-bo {
+  list-style: none;
+  padding: 0;
+}
+
+.nut-bo {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 12px 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Bài tập trắc nghiệm */
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+legend {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.dap-an {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  margin: 10px 0;
+  border: 3px solid var(--vien);
+  border-radius: 12px;
+  background: var(--nen-nut);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.dap-an:focus-within {
+  outline: 5px solid var(--focus);
+  outline-offset: 3px;
+  background: var(--nen-focus);
+}
+
+input[type="radio"] {
+  width: 28px;
+  height: 28px;
+  accent-color: var(--focus);
+}
+
+/* Mặt sau của thẻ và lời giới thiệu */
+.nghia,
+.gioi-thieu {
+  font-size: 24px;
+  border-left: 6px solid var(--vien);
+  padding: 8px 0 8px 18px;
+  margin: 16px 0;
+}
+
+/* Tiêu đề phụ trong phần hướng dẫn */
+h3 {
+  font-size: 25px;
+  margin: 20px 0 6px;
+}
