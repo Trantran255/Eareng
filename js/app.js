@@ -19,6 +19,9 @@ const thongBao = document.getElementById("thong-bao");
 const phanTinh = document.getElementById("phan-tinh");     // giới thiệu + hướng dẫn
 const khuHuongDan = document.getElementById("huong-dan");  // riêng phần hướng dẫn
 const nutDoiMau = document.getElementById("nut-doi-mau");  // nằm ngay sau khu vực học
+const tenWeb = document.querySelector("h1");                // tên web ở đầu trang
+const khuGioiThieu = document.getElementById("gioi-thieu"); // phần giới thiệu
+const nhacTab = phanTinh.querySelector("p");               // câu "Để bắt đầu, nhấn Tab"
 
 const SO_CAU_ON_TAP = 6;   // số câu của một bài ôn tập nhanh
 
@@ -131,7 +134,10 @@ function khiBam(id, ham) {
 
 /* ===== MÀN HÌNH 0: HỎI CÓ CẦN NGHE HƯỚNG DẪN KHÔNG ===== */
 function hienHoiHuongDan() {
+  tenWeb.hidden = false;
   phanTinh.hidden = false;
+  khuGioiThieu.hidden = false;
+  nhacTab.hidden = false;
   nutDoiMau.hidden = false;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
@@ -148,6 +154,10 @@ function hienHoiHuongDan() {
 
 /* ===== MÀN HÌNH HƯỚNG DẪN (nội dung tĩnh nằm trong index.html) ===== */
 function hienHuongDan() {
+  /* Màn hướng dẫn chỉ hiện phần hướng dẫn, không lặp lại tên web và giới thiệu */
+  tenWeb.hidden = true;
+  khuGioiThieu.hidden = true;
+  nhacTab.hidden = true;
   phanTinh.hidden = false;
   nutDoiMau.hidden = false;
   khuHuongDan.hidden = false;
@@ -163,7 +173,10 @@ function hienHuongDan() {
 
 /* ===== MÀN HÌNH 1: DANH SÁCH BỘ TỪ ===== */
 function hienDanhSachBo() {
-  phanTinh.hidden = false;
+  /* Từ đây trở đi ẩn tên web và phần giới thiệu,
+     để trình đọc màn hình không đọc lại chúng ở mỗi màn */
+  tenWeb.hidden = true;
+  phanTinh.hidden = true;
   nutDoiMau.hidden = false;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
@@ -190,6 +203,7 @@ function hienDanhSachBo() {
 
 /* ===== MENU CỦA MỘT BỘ TỪ ===== */
 function hienMenuBo() {
+  tenWeb.hidden = true;
   phanTinh.hidden = true;    /* vào bộ từ: ẩn giới thiệu + hướng dẫn, 1 màn hình = 1 việc */
   nutDoiMau.hidden = true;
   thongBao.textContent = "";
