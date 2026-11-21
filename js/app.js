@@ -206,7 +206,9 @@ function hienMenuBo() {
       batDauXemThe();
     }
   });
-  khiBam("nut-on-tap", batDauOnTap);
+  khiBam("nut-on-tap", function () {
+    hienLuuYBaiTap(batDauOnTap);
+  });
   khiBam("nut-chon-bo", hienDanhSachBo);
 
   focusVao(document.getElementById("tieu-de-man"));
@@ -299,8 +301,12 @@ function hienChuyenGiaiDoan() {
     '<button id="nut-xem-lai">Nghe lại thẻ từ đầu</button> ' +
     '<button id="nut-chon-bo">Chọn bộ khác</button>';
 
-  khiBam("nut-bt-thu-tu", function () { batDauBaiTap(false); });
-  khiBam("nut-bt-tron", function () { batDauBaiTap(true); });
+  khiBam("nut-bt-thu-tu", function () {
+    hienLuuYBaiTap(function () { batDauBaiTap(false); });
+  });
+  khiBam("nut-bt-tron", function () {
+    hienLuuYBaiTap(function () { batDauBaiTap(true); });
+  });
   khiBam("nut-xem-lai", batDauXemThe);
   khiBam("nut-chon-bo", hienDanhSachBo);
 
@@ -311,6 +317,32 @@ function hienChuyenGiaiDoan() {
 /* ============================================================
    GIAI ĐOẠN 2 — BÀI TẬP TRẮC NGHIỆM + SRS TRONG BUỔI
    ============================================================ */
+
+/* ===== MÀN LƯU Ý TRƯỚC KHI LÀM BÀI: báo trước tiếng đúng và tiếng sai =====
+   batDau là hàm sẽ chạy khi người học chọn "Bắt đầu làm bài". */
+function hienLuuYBaiTap(batDau) {
+  thongBao.textContent = "";
+  manHinh.innerHTML =
+    '<h2 id="tieu-de-man">Lưu ý trước khi làm bài: trả lời đúng sẽ có một tiếng vui, ' +
+    'trả lời sai sẽ có một tiếng trầm. Kết quả cũng được đọc bằng lời. ' +
+    'Câu trả lời sai sẽ quay lại sau vài câu.</h2>' +
+    '<button id="nut-bat-dau-bai">Bắt đầu làm bài</button> ' +
+    '<button id="nut-thu-dung">Nghe thử tiếng đúng</button> ' +
+    '<button id="nut-thu-sai">Nghe thử tiếng sai</button>';
+
+  khiBam("nut-bat-dau-bai", batDau);
+  khiBam("nut-thu-dung", function () {
+    phatAmThanh(true);
+    thongBao.textContent = "Đây là tiếng khi trả lời đúng.";
+  });
+  khiBam("nut-thu-sai", function () {
+    phatAmThanh(false);
+    thongBao.textContent = "Đây là tiếng khi trả lời sai.";
+  });
+
+  focusVao(document.getElementById("tieu-de-man"));
+}
+
 function batDauBaiTap(tron) {
   cheDoOnTap = false;
   dangTron = tron;
