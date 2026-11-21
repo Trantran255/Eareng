@@ -454,3 +454,16 @@ function hienKetThuc() {
 
 /* ===== KHỞI ĐỘNG ===== */
 hienHoiHuongDan();
+
+/* Trình đọc màn hình cần chút thời gian dựng xong trang.
+   Đặt lại con trỏ vào câu hỏi sau khi trang tải xong, để mũi tên dùng được ngay. */
+window.addEventListener("load", function () {
+  setTimeout(function () {
+    const tieuDe = document.getElementById("tieu-de-man");
+    const dangO = document.activeElement;
+    if (tieuDe && (dangO === document.body || dangO === tieuDe)) {
+      tieuDe.blur();
+      focusVao(tieuDe);
+    }
+  }, 800);
+});
