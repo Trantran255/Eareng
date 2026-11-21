@@ -127,6 +127,15 @@ function focusVao(phanTu) {
   phanTu.focus();
 }
 
+/* Cho trình đọc màn hình đọc một nội dung. Xóa trước rồi mới ghi lại,
+   để bấm cùng một nút nhiều lần thì lần nào cũng được đọc. */
+function docLen(noiDung) {
+  thongBao.textContent = "";
+  setTimeout(function () {
+    thongBao.innerHTML = noiDung;
+  }, 60);
+}
+
 /* Gắn hành động cho nút theo id (viết gọn) */
 function khiBam(id, ham) {
   document.getElementById(id).addEventListener("click", ham);
@@ -254,24 +263,27 @@ function hienThe() {
   thongBao.textContent = "";
   const the = boHienTai.tu[viTriThe];
 
+  /* Thứ tự nút: phát âm tiếng Anh trước, rồi đánh vần, cuối cùng mới nghe nghĩa */
   let html =
     '<h2 id="tieu-de-man">Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length +
     ': ' + bocEn(the.en) + '</h2>' +
-    '<button type="button" id="nut-nghe-nghia">Nghe nghĩa</button> ';
+    '<button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button> ';
 
   if (the.en.indexOf(" ") === -1) {
-    html += '<button type="button" id="nut-danh-van">Đọc từng chữ cái</button>';
+    html += '<button type="button" id="nut-danh-van">Đọc từng chữ cái</button> ';
   }
 
-  html += '<div id="mat-sau"></div>';
+  html += '<button type="button" id="nut-nghe-nghia">Nghe nghĩa</button>' +
+          '<div id="mat-sau"></div>';
 
   manHinh.innerHTML = html;
+
+  khiBam("nut-nghe-tu", function () { docLen(bocEn(the.en)); });
 
   const nutDanhVan = document.getElementById("nut-danh-van");
   if (nutDanhVan) {
     nutDanhVan.addEventListener("click", function () {
-      const chuoi = the.en.toLowerCase().split("").join(", ");
-      thongBao.innerHTML = bocEn(chuoi);
+      docLen(bocEn(the.en.toLowerCase().split("").join(", ")));
     });
   }
 
@@ -413,18 +425,25 @@ function hienCauHoi() {
   html += '</fieldset>' +
           '<button type="submit">Nộp đáp án</button>';
 
-  if (chieu === "en2vi" && the.en.indexOf(" ") === -1) {
-    html += ' <button type="button" id="nut-danh-van">Đọc từng chữ cái</button>';
+  if (chieu === "en2vi") {
+    html += ' <button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button>';
+    if (the.en.indexOf(" ") === -1) {
+      html += ' <button type="button" id="nut-danh-van">Đọc từng chữ cái</button>';
+    }
   }
 
   html += '</form>';
   manHinh.innerHTML = html;
 
+  const nutNgheTu = document.getElementById("nut-nghe-tu");
+  if (nutNgheTu) {
+    nutNgheTu.addEventListener("click", function () { docLen(bocEn(the.en)); });
+  }
+
   const nutDanhVan = document.getElementById("nut-danh-van");
   if (nutDanhVan) {
     nutDanhVan.addEventListener("click", function () {
-      const chuoi = the.en.toLowerCase().split("").join(", ");
-      thongBao.innerHTML = bocEn(chuoi);
+      docLen(bocEn(the.en.toLowerCase().split("").join(", ")));
     });
   }
 
