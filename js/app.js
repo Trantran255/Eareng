@@ -262,8 +262,11 @@ function batDauXemThe() {
 function hienThe() {
   thongBao.textContent = "";
   const the = boHienTai.tu[viTriThe];
+  const laTheCuoi = (viTriThe === boHienTai.tu.length - 1);
 
-  /* Thứ tự nút: phát âm tiếng Anh trước, rồi đánh vần, cuối cùng mới nghe nghĩa */
+  /* Mỗi thẻ luôn có đủ các nút, theo thứ tự:
+     phát âm tiếng Anh, đánh vần, nghe nghĩa, thẻ tiếp theo.
+     Không nút nào biến mất, nên nghe lại bao nhiêu lần cũng được. */
   let html =
     '<h2 id="tieu-de-man">Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length +
     ': ' + bocEn(the.en) + '</h2>' +
@@ -273,7 +276,9 @@ function hienThe() {
     html += '<button type="button" id="nut-danh-van">Đọc từng chữ cái</button> ';
   }
 
-  html += '<button type="button" id="nut-nghe-nghia">Nghe nghĩa</button>' +
+  html += '<button type="button" id="nut-nghe-nghia">Nghe nghĩa</button> ' +
+          '<button type="button" id="nut-the-tiep">' +
+          (laTheCuoi ? 'Hết thẻ — sang phần bài tập' : 'Thẻ tiếp theo') + '</button>' +
           '<div id="mat-sau"></div>';
 
   manHinh.innerHTML = html;
@@ -287,24 +292,14 @@ function hienThe() {
     });
   }
 
-  khiBam("nut-nghe-nghia", function () { hienNghia(the); });
+  khiBam("nut-nghe-nghia", function () {
+    /* Hiện nghĩa trên thẻ và cho trình đọc màn hình đọc lên */
+    const cauNghia = bocEn(the.en) + ' nghĩa là: ' + the.vi;
+    document.getElementById("mat-sau").innerHTML = '<p class="nghia">' + cauNghia + '</p>';
+    docLen(cauNghia);
+  });
 
-  focusVao(document.getElementById("tieu-de-man"));
-}
-
-function hienNghia(the) {
-  /* Hiện nghĩa trên thẻ + đổ vào vùng aria-live để screen reader tự đọc */
-  const cauNghia = bocEn(the.en) + ' nghĩa là: ' + the.vi;
-  document.getElementById("mat-sau").innerHTML = '<p class="nghia">' + cauNghia + '</p>';
-  thongBao.innerHTML = cauNghia;
-
-  /* Thay nút "Nghe nghĩa" bằng nút đi tiếp, focus vào đó luôn */
-  const nutCu = document.getElementById("nut-nghe-nghia");
-  const nutTiep = document.createElement("button");
-  nutTiep.type = "button";
-  const laTheCuoi = (viTriThe === boHienTai.tu.length - 1);
-  nutTiep.textContent = laTheCuoi ? "Hết thẻ — sang phần bài tập" : "Thẻ tiếp theo";
-  nutTiep.addEventListener("click", function () {
+  khiBam("nut-the-tiep", function () {
     if (laTheCuoi) {
       hienChuyenGiaiDoan();
     } else {
@@ -312,8 +307,8 @@ function hienNghia(the) {
       hienThe();
     }
   });
-  nutCu.replaceWith(nutTiep);
-  nutTiep.focus();
+
+  focusVao(document.getElementById("tieu-de-man"));
 }
 
 /* ===== MÀN CHUYỂN: nghe thẻ xong, chọn việc tiếp theo ===== */
