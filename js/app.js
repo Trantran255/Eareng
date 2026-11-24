@@ -39,46 +39,55 @@ if (localStorage.getItem("cheDoMau") === "sang") {
   document.body.classList.remove("tuong-phan-cao");
 }
 
-nutDoiMau.addEventListener("click", function () {
+function doiCheDoMau() {
   document.body.classList.toggle("tuong-phan-cao");
   const dangCao = document.body.classList.contains("tuong-phan-cao");
   localStorage.setItem("cheDoMau", dangCao ? "cao" : "sang");
-});
+  docLen(dangCao ? "Đã chuyển sang nền đen chữ vàng." : "Đã chuyển sang nền sáng chữ đen.");
+}
+
+/* Nút đổi màu cũ nằm ngoài khu vực học: không dùng nữa, luôn ẩn */
+nutDoiMau.hidden = true;
+
+/* ===== BỎ CHỮ "NÚT" KHI TRÌNH ĐỌC MÀN HÌNH ĐỌC =====
+   Mặc định, trình đọc màn hình đọc tên nút rồi thêm chữ "nút".
+   Khai báo role="menuitem" thì nó chỉ đọc đúng chữ trên nút.
+   Đoạn này tự gắn khai báo đó cho mọi nút xuất hiện trong khu vực học. */
+function boChuNut() {
+  manHinh.querySelectorAll("button:not([role])").forEach(function (nut) {
+    nut.setAttribute("role", "menuitem");
+  });
+}
+new MutationObserver(boChuNut).observe(manHinh, { childList: true, subtree: true });
+
+/* Nút đổi màu nằm ngay trong khu vực học (ở màn hỏi hướng dẫn và màn danh sách) */
+const NUT_MAU_HTML = ' <button type="button" id="nut-mau-trong">Đổi chế độ màu</button>';
+function ganNutMau() {
+  const nut = document.getElementById("nut-mau-trong");
+  if (nut) nut.addEventListener("click", doiCheDoMau);
+}
 
 /* ===== ĐIỀU HƯỚNG BẰNG MŨI TÊN =====
    Mũi tên xuống/phải: tới nút kế tiếp. Mũi tên lên/trái: nút trước.
    Hết danh sách thì quay vòng. Đang đứng ở tiêu đề thì mũi tên nhảy
-   vào nút đầu tiên. Trong nhóm đáp án (radio) thì để trình duyệt tự lo. */
+   vào nút đầu tiên. */
 document.addEventListener("keydown", function (e) {
   const tien = (e.key === "ArrowDown" || e.key === "ArrowRight");
   const lui = (e.key === "ArrowUp" || e.key === "ArrowLeft");
   if (!tien && !lui) return;
 
-  const dangO = document.activeElement;
-  if (dangO && dangO.type === "radio") return;   /* radio: mũi tên có sẵn */
-
-  /* Các điểm dừng: mọi nút còn bấm được trong khu vực học + radio đầu tiên */
-  const diemDung = [];
-  manHinh.querySelectorAll("button:not([disabled]), input[type=radio]:not([disabled])")
-    .forEach(function (o) {
-      if (o.type === "radio" && diemDung.some(function (d) { return d.type === "radio"; })) return;
-      diemDung.push(o);
-    });
-  if (!nutDoiMau.hidden) diemDung.push(nutDoiMau);
+  /* Các điểm dừng: mọi nút còn bấm được trong khu vực học */
+  const diemDung = Array.from(manHinh.querySelectorAll("button:not([disabled])"));
   if (diemDung.length === 0) return;
 
   e.preventDefault();
-  let i = diemDung.indexOf(dangO);
+  let i = diemDung.indexOf(document.activeElement);
   if (i === -1) {
     i = tien ? 0 : diemDung.length - 1;
   } else {
     i = tien ? (i + 1) % diemDung.length : (i - 1 + diemDung.length) % diemDung.length;
   }
   diemDung[i].focus();
-  /* Tới đáp án nào thì chọn luôn đáp án đó, khỏi phải nhấn thêm phím */
-  if (diemDung[i].type === "radio") {
-    diemDung[i].checked = true;
-  }
 });
 
 /* ===== ÂM THANH PHẢN HỒI =====
@@ -163,7 +172,6 @@ function hienManBatDau() {
   nhacTab.hidden = false;
   khuGioiThieu.hidden = true;
   khuHuongDan.hidden = true;
-  nutDoiMau.hidden = true;
   thongBao.textContent = "";
   manHinh.innerHTML = '<button id="nut-khoi-dong">Bắt đầu</button>';
 
@@ -196,7 +204,6 @@ function hienHoiHuongDan() {
   phanTinh.hidden = false;
   khuGioiThieu.hidden = false;
   nhacTab.hidden = true;
-  nutDoiMau.hidden = false;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
 
@@ -210,10 +217,12 @@ function hienHoiHuongDan() {
       'Bạn có cần nghe hướng dẫn sử dụng không?' +
     '</h2>' +
     '<button id="nut-co">Có, nghe hướng dẫn</button> ' +
-    '<button id="nut-khong">Không, vào học luôn</button>';
+    '<button id="nut-khong">Không, vào học luôn</button>' +
+    NUT_MAU_HTML;
 
   khiBam("nut-co", hienHuongDan);
   khiBam("nut-khong", hienDanhSachBo);
+  ganNutMau();
 
   focusVao(document.getElementById("tieu-de-man"));
 }
@@ -225,7 +234,6 @@ function hienHuongDan() {
   khuGioiThieu.hidden = true;
   nhacTab.hidden = true;
   phanTinh.hidden = false;
-  nutDoiMau.hidden = false;
   khuHuongDan.hidden = false;
   thongBao.textContent = "";
   manHinh.innerHTML =
@@ -243,7 +251,6 @@ function hienDanhSachBo() {
      để trình đọc màn hình không đọc lại chúng ở mỗi màn */
   tenWeb.hidden = true;
   phanTinh.hidden = true;
-  nutDoiMau.hidden = false;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
   let html = '<h2 id="tieu-de-man">Học từ vựng — chọn bộ từ</h2>' +
@@ -253,10 +260,11 @@ function hienDanhSachBo() {
     html += '<li><button class="nut-bo" data-so="' + chiSo + '">' +
             bo.ten + ' (' + bo.tu.length + ' từ)</button></li>';
   });
-  html += '</ul>';
+  html += '</ul>' + NUT_MAU_HTML;
   manHinh.innerHTML = html;
 
   khiBam("nut-nghe-lai-hd", hienHuongDan);
+  ganNutMau();
   document.querySelectorAll(".nut-bo").forEach(function (nut) {
     nut.addEventListener("click", function () {
       boHienTai = CAC_BO_TU[Number(nut.dataset.so)];
@@ -271,7 +279,6 @@ function hienDanhSachBo() {
 function hienMenuBo() {
   tenWeb.hidden = true;
   phanTinh.hidden = true;    /* vào bộ từ: ẩn giới thiệu + hướng dẫn, 1 màn hình = 1 việc */
-  nutDoiMau.hidden = true;
   thongBao.textContent = "";
   manHinh.innerHTML =
     '<h2 id="tieu-de-man">Bộ từ: ' + boHienTai.ten + ' (' + boHienTai.tu.length + ' từ)</h2>' +
@@ -463,28 +470,26 @@ function hienCauHoi() {
     ? bocEn(the.en) + ' nghĩa là gì?'
     : '"' + the.vi + '" trong tiếng Anh là gì?';
 
-  let html = '<h2 id="tieu-de-man">Câu hỏi còn lại: ' + coc.length + ' — ' + cauHoi + '</h2>' +
-             '<form id="form-bai-tap"><fieldset>' +
-             '<legend>Mũi tên để chọn đáp án, Enter để nộp</legend>';
+  /* Ba đáp án là ba nút. Mũi tên để tới đáp án (máy đọc đáp án đó),
+     Enter để trả lời luôn bằng đáp án đang đứng. */
+  const kieuDapAn = 'display:block;width:100%;text-align:left;font-size:24px;' +
+                    'padding:16px 18px;margin:10px 0;';
+
+  let html = '<h2 id="tieu-de-man">Câu hỏi còn lại: ' + coc.length + ' — ' + cauHoi + '</h2>';
 
   baLuaChon.forEach(function (luaChon, i) {
     const noiDung = (chieu === "en2vi") ? luaChon.vi : bocEn(luaChon.en);
-    html += '<label class="dap-an">' +
-            '<input type="radio" name="dap-an" value="' + i + '"> ' +
-            noiDung + '</label>';
+    html += '<button type="button" class="nut-dap-an" data-so="' + i + '" style="' + kieuDapAn + '">' +
+            noiDung + '</button>';
   });
 
-  html += '</fieldset>' +
-          '<button type="submit">Nộp đáp án</button>';
-
   if (chieu === "en2vi") {
-    html += ' <button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button>';
+    html += '<button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button> ';
     if (the.en.indexOf(" ") === -1) {
-      html += ' <button type="button" id="nut-danh-van">Đọc từng chữ cái</button>';
+      html += '<button type="button" id="nut-danh-van">Đọc từng chữ cái</button>';
     }
   }
 
-  html += '</form>';
   manHinh.innerHTML = html;
 
   const nutNgheTu = document.getElementById("nut-nghe-tu");
@@ -499,21 +504,16 @@ function hienCauHoi() {
     });
   }
 
-  /* Enter khi đang đứng ở radio = nộp form (hành vi HTML chuẩn, không bắt phím) */
-  document.getElementById("form-bai-tap").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const daChon = document.querySelector('input[name="dap-an"]:checked');
-    if (!daChon) {
-      thongBao.textContent = "Bạn chưa chọn đáp án. Dùng phím mũi tên để chọn.";
-      return;
-    }
-    chamDiem(baLuaChon[Number(daChon.value)], the);
+  document.querySelectorAll(".nut-dap-an").forEach(function (nut) {
+    nut.addEventListener("click", function () {
+      chamDiem(baLuaChon[Number(nut.dataset.so)], the, baLuaChon);
+    });
   });
 
   focusVao(document.getElementById("tieu-de-man"));
 }
 
-function chamDiem(luaChon, the) {
+function chamDiem(luaChon, the, baLuaChon) {
   const dung = (luaChon.en === the.en);
   phatAmThanh(dung);
 
@@ -528,14 +528,20 @@ function chamDiem(luaChon, the) {
                          ' nghĩa là "' + the.vi + '". Câu này sẽ quay lại sau.';
   }
 
-  /* Khóa đáp án, thay nút nộp bằng nút đi tiếp, focus vào đó */
-  document.querySelectorAll('input[name="dap-an"]').forEach(function (o) { o.disabled = true; });
-  const form = document.getElementById("form-bai-tap");
+  /* Khóa ba đáp án, ghi chú đáp án đúng cho người nhìn được,
+     rồi thêm nút đi tiếp và đặt con trỏ vào đó */
+  document.querySelectorAll(".nut-dap-an").forEach(function (nut) {
+    nut.disabled = true;
+    if (baLuaChon[Number(nut.dataset.so)].en === the.en) {
+      nut.innerHTML += " (đáp án đúng)";
+    }
+  });
+
   const nutTiep = document.createElement("button");
   nutTiep.type = "button";
   nutTiep.textContent = "Câu tiếp theo";
   nutTiep.addEventListener("click", hienCauHoi);
-  form.querySelector('button[type="submit"]').replaceWith(nutTiep);
+  manHinh.appendChild(nutTiep);
   nutTiep.focus();
 }
 
