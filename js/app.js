@@ -5,7 +5,7 @@
    tên web → giới thiệu → hỏi "có cần nghe hướng dẫn không?"
    → (hướng dẫn) → danh sách bộ từ.
    - Máy chỉ đọc đúng những gì đang hiện trên màn hình, mỗi chữ một lần.
-   - Phát âm tiếng Anh dùng giọng tiếng Anh của trình duyệt / Windows.
+   - Phát âm tiếng Anh dùng bản thu giọng người thật của từ điển.
    - Điều hướng: mũi tên 4 chiều nhảy giữa các nút, tới nút nào đọc
      nút đó; Enter / Space để chọn. Tab vẫn dùng được.
    - Chọn bộ từ → menu bộ: "Học từ mới" hoặc "Ôn tập nhanh".
@@ -128,9 +128,12 @@ function phatBip(dung) {
 }
 
 /* ===== PHÁT ÂM TIẾNG ANH =====
-   Dùng giọng tiếng Anh có sẵn trong trình duyệt và Windows (giọng Anh Mỹ),
-   thay vì để trình đọc màn hình đọc bằng giọng của nó.
-   Máy nào không có giọng tiếng Anh thì quay về cách cũ: đưa chữ cho trình đọc màn hình. */
+   Ưu tiên 1: bản thu giọng người thật của từ điển (từ điển Oxford, giọng Anh Mỹ),
+              tải thẳng từ mạng mỗi khi cần, không phải lưu file nào.
+   Ưu tiên 2: bản thu giọng người thật trên kho Wikimedia.
+   Ưu tiên 3: giọng tiếng Anh có sẵn trong trình duyệt / Windows.
+   Cuối cùng: đưa chữ cho trình đọc màn hình.
+   Từ nào nguồn trên không có thì tự động thử nguồn kế tiếp. */
 let giongAnh = null;
 
 function timGiongAnh() {
@@ -147,7 +150,7 @@ if ("speechSynthesis" in window) {
   window.speechSynthesis.addEventListener("voiceschanged", timGiongAnh);
 }
 
-/* chu: chữ tiếng Anh cần phát âm. chamLai: true thì đọc chậm hơn (dùng khi đánh vần). */
+/* Đọc bằng giọng máy. chamLai: true thì đọc chậm hơn (dùng khi đọc từng chữ cái). */
 function phatAmAnh(chu, chamLai) {
   if (!("speechSynthesis" in window) || !giongAnh) {
     docLen(bocEn(chu));
@@ -159,6 +162,87 @@ function phatAmAnh(chu, chamLai) {
   cau.lang = giongAnh.lang;
   cau.rate = chamLai ? 0.7 : 0.85;
   window.speechSynthesis.speak(cau);
+}
+
+const mayPhat = new Audio();   // máy phát bản thu từ điển
+let luotPhat = 0;              // số thứ tự lượt phát, để lượt cũ không chen vào lượt mới
+let henGioPhat = null;         // hẹn giờ tự phát khi vừa mở thẻ
+const nguonTot = {};           // nhớ nguồn nào phát được cho từng từ
+
+/* Dừng mọi tiếng phát âm đang phát hoặc đang chờ phát */
+function dungPhatAm() {
+  clearTimeout(henGioPhat);
+  luotPhat++;
+  mayPhat.pause();
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+/* Các địa chỉ bản thu của một từ, theo thứ tự ưu tiên */
+function dsNguon(chu) {
+  const thuong = chu.toLowerCase().replace(/[^a-z' -]/g, "").trim();
+  const gach = encodeURIComponent(thuong.replace(/ /g, "_"));
+  const hoa = encodeURIComponent(thuong.charAt(0).toUpperCase() + thuong.slice(1));
+  const oxford = "https://ssl.gstatic.com/dictionary/static/sounds/oxford/";
+  const wiki = "https://commons.wikimedia.org/wiki/Special:FilePath/En-us-";
+  return [
+    oxford + gach + "--_us_1.mp3",
+    wiki + encodeURIComponent(thuong) + ".ogg",
+    wiki + hoa + ".ogg"
+  ];
+}
+
+/* Phát âm một từ tiếng Anh bằng bản thu từ điển; không có thì dùng giọng máy */
+function phatAmTuDien(chu) {
+  dungPhatAm();
+  const luot = luotPhat;
+  const ds = nguonTot[chu] ? [nguonTot[chu]] : dsNguon(chu);
+  let i = 0;
+
+  function thu() {
+    if (luot !== luotPhat) return;
+    if (i >= ds.length) { phatAmAnh(chu, false); return; }
+    const diaChi = ds[i++];
+    let xong = false;
+    const hetCho = setTimeout(hong, 3000);   /* mạng chậm quá 3 giây thì thử nguồn kế */
+
+    function hong() {
+      if (xong) return;
+      xong = true;
+      clearTimeout(hetCho);
+      mayPhat.onerror = null;
+      mayPhat.onplaying = null;
+      if (luot === luotPhat) { mayPhat.pause(); thu(); }
+    }
+
+    mayPhat.onerror = hong;
+    mayPhat.onplaying = function () {
+      xong = true;
+      clearTimeout(hetCho);
+      nguonTot[chu] = diaChi;
+    };
+    mayPhat.src = diaChi;
+    mayPhat.play().catch(hong);
+  }
+  thu();
+}
+
+/* Tự phát âm từ sau khi trình đọc màn hình đọc xong dòng chữ đầu màn */
+function tuPhatSau(chu, miliGiay) {
+  clearTimeout(henGioPhat);
+  henGioPhat = setTimeout(function () { phatAmTuDien(chu); }, miliGiay);
+}
+
+/* Đọc từng chữ cái: mỗi chữ cái một nhịp, bằng giọng máy tiếng Anh */
+function docTungChu(chu) {
+  dungPhatAm();
+  phatAmAnh(chu.toLowerCase().split("").join(", "), true);
+}
+
+/* Từ tiếng Anh hiện to trên màn hình. Trình đọc màn hình không đọc chữ này
+   (giọng của nó đọc tiếng Anh không chuẩn); thay vào đó web phát bản thu từ điển. */
+function hienTuAnh(chu) {
+  return '<span aria-hidden="true" lang="en" style="display:block;font-size:40px;margin-top:8px;">' +
+         chu + '</span>';
 }
 
 /* ===== TIỆN ÍCH ===== */
@@ -174,6 +258,7 @@ function tronMang(mang) {
 
 /* Chuyển focus tới phần tử — "con mắt" của người mù sau mỗi lần đổi màn hình */
 function focusVao(phanTu) {
+  dungPhatAm();
   phanTu.setAttribute("tabindex", "-1");
   phanTu.focus();
 }
@@ -385,8 +470,8 @@ function hienThe() {
      phát âm tiếng Anh, đánh vần, nghe nghĩa, thẻ tiếp theo.
      Không nút nào biến mất, nên nghe lại bao nhiêu lần cũng được. */
   let html =
-    MO_KHOI + 'Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length +
-    ': ' + bocEn(the.en) + '</div>' +
+    MO_KHOI + 'Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length + '.' +
+    hienTuAnh(the.en) + '</div>' +
     '<button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button> ';
 
   if (the.en.indexOf(" ") === -1) {
@@ -399,18 +484,17 @@ function hienThe() {
 
   manHinh.innerHTML = html;
 
-  khiBam("nut-nghe-tu", function () { phatAmAnh(the.en, false); });
+  khiBam("nut-nghe-tu", function () { phatAmTuDien(the.en); });
 
   const nutDanhVan = document.getElementById("nut-danh-van");
   if (nutDanhVan) {
-    nutDanhVan.addEventListener("click", function () {
-      phatAmAnh(the.en.toLowerCase().split("").join(", "), true);
-    });
+    nutDanhVan.addEventListener("click", function () { docTungChu(the.en); });
   }
 
   khiBam("nut-nghe-nghia", function () {
     /* Hiện nghĩa ở vùng thông báo phía dưới; trình đọc màn hình đọc đúng dòng đó */
-    docLen(bocEn(the.en) + ' nghĩa là: ' + the.vi);
+    dungPhatAm();
+    docLen('Nghĩa là: ' + the.vi);
   });
 
   khiBam("nut-the-tiep", function () {
@@ -423,6 +507,8 @@ function hienThe() {
   });
 
   focusVao(document.getElementById("tieu-de-man"));
+  /* Chờ máy đọc xong "Thẻ ... trên ..." rồi tự phát âm từ tiếng Anh */
+  tuPhatSau(the.en, 1800);
 }
 
 /* ===== MÀN CHUYỂN: nghe thẻ xong, chọn việc tiếp theo ===== */
@@ -517,7 +603,7 @@ function hienCauHoi() {
   const baLuaChon = tronMang([the, khac[0], khac[1]]);
 
   const cauHoi = (chieu === "en2vi")
-    ? bocEn(the.en) + ' nghĩa là gì?'
+    ? 'Từ sau đây nghĩa là gì?' + hienTuAnh(the.en)
     : '"' + the.vi + '" trong tiếng Anh là gì?';
 
   /* Ba đáp án là ba nút. Mũi tên để tới đáp án (máy đọc đáp án đó),
@@ -544,14 +630,12 @@ function hienCauHoi() {
 
   const nutNgheTu = document.getElementById("nut-nghe-tu");
   if (nutNgheTu) {
-    nutNgheTu.addEventListener("click", function () { phatAmAnh(the.en, false); });
+    nutNgheTu.addEventListener("click", function () { phatAmTuDien(the.en); });
   }
 
   const nutDanhVan = document.getElementById("nut-danh-van");
   if (nutDanhVan) {
-    nutDanhVan.addEventListener("click", function () {
-      phatAmAnh(the.en.toLowerCase().split("").join(", "), true);
-    });
+    nutDanhVan.addEventListener("click", function () { docTungChu(the.en); });
   }
 
   document.querySelectorAll(".nut-dap-an").forEach(function (nut) {
@@ -561,10 +645,15 @@ function hienCauHoi() {
   });
 
   focusVao(document.getElementById("tieu-de-man"));
+  /* Hỏi từ tiếng Anh: chờ máy đọc xong câu hỏi rồi tự phát âm từ đó */
+  if (chieu === "en2vi") {
+    tuPhatSau(the.en, 3000);
+  }
 }
 
 function chamDiem(luaChon, the, baLuaChon) {
   const dung = (luaChon.en === the.en);
+  dungPhatAm();
   phatAmThanh(dung);
 
   coc.shift();
@@ -626,6 +715,6 @@ function hienKetThuc() {
 }
 
 /* ===== KHỞI ĐỘNG =====
-   Không tự đặt con trỏ lúc mở trang. Trình đọc màn hình đọc tên trang,
-   chính là câu "Để bắt đầu, nhấn phím Tab một lần..." đang hiện trên màn hình. */
+   Không tự đặt con trỏ lúc mở trang, để trình đọc màn hình tự đọc từ đầu trang:
+   tên tab, rồi câu "Để bắt đầu, nhấn phím Tab một lần". */
 hienManBatDau();
