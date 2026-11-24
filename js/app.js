@@ -4,6 +4,8 @@
    Mở web: máy đọc "nhấn Tab để bắt đầu". Nhấn Tab: máy đọc liền một mạch
    tên web → giới thiệu → hỏi "có cần nghe hướng dẫn không?"
    → (hướng dẫn) → danh sách bộ từ.
+   - Máy chỉ đọc đúng những gì đang hiện trên màn hình, không có chữ ẩn.
+   - Phát âm tiếng Anh dùng giọng tiếng Anh của trình duyệt / Windows.
    - Điều hướng: mũi tên 4 chiều nhảy giữa các nút, tới nút nào đọc
      nút đó; Enter / Space để chọn. Tab vẫn dùng được.
    - Chọn bộ từ → menu bộ: "Học từ mới" hoặc "Ôn tập nhanh".
@@ -120,6 +122,40 @@ function phatBip(dung) {
   } catch (loi) { /* máy không phát được tiếng thì thôi */ }
 }
 
+/* ===== PHÁT ÂM TIẾNG ANH =====
+   Dùng giọng tiếng Anh có sẵn trong trình duyệt và Windows (giọng Anh Mỹ),
+   thay vì để trình đọc màn hình đọc bằng giọng của nó.
+   Máy nào không có giọng tiếng Anh thì quay về cách cũ: đưa chữ cho trình đọc màn hình. */
+let giongAnh = null;
+
+function timGiongAnh() {
+  const ds = window.speechSynthesis.getVoices();
+  giongAnh =
+    ds.find(function (g) { return /Google US English/i.test(g.name); }) ||
+    ds.find(function (g) { return g.lang === "en-US"; }) ||
+    ds.find(function (g) { return /^en/i.test(g.lang); }) ||
+    null;
+}
+
+if ("speechSynthesis" in window) {
+  timGiongAnh();
+  window.speechSynthesis.addEventListener("voiceschanged", timGiongAnh);
+}
+
+/* chu: chữ tiếng Anh cần phát âm. chamLai: true thì đọc chậm hơn (dùng khi đánh vần). */
+function phatAmAnh(chu, chamLai) {
+  if (!("speechSynthesis" in window) || !giongAnh) {
+    docLen(bocEn(chu));
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const cau = new SpeechSynthesisUtterance(chu);
+  cau.voice = giongAnh;
+  cau.lang = giongAnh.lang;
+  cau.rate = chamLai ? 0.7 : 0.85;
+  window.speechSynthesis.speak(cau);
+}
+
 /* ===== TIỆN ÍCH ===== */
 function bocEn(chu) { return '<span lang="en">' + chu + '</span>'; }
 
@@ -154,20 +190,12 @@ function khiBam(id, ham) {
 /* ===== MÀN BẮT ĐẦU: vừa mở web =====
    Trang chỉ có câu "Để bắt đầu, nhấn phím Tab một lần" và một nút.
    Trình đọc màn hình tự đọc câu đó khi trang mở. Nhấn Tab (con trỏ vào nút)
-   là web bắt đầu luôn, không cần nhấn thêm phím nào. */
-const TEN_TRANG = "EarEng — Học từ vựng tiếng Anh bằng tai";
+   là web bắt đầu luôn, không cần nhấn thêm phím nào.
+   Nguyên tắc: máy chỉ đọc đúng những gì đang hiện trên màn hình, không có chữ ẩn. */
 let daBatDau = false;
 
 function hienManBatDau() {
-  /* Tên tab trình duyệt là thứ được đọc đầu tiên khi mở trang */
-  document.title = "EarEng — nhấn phím Tab để bắt đầu";
-
-  /* Tên web và giới thiệu vẫn hiện cho người nhìn được, nhưng trình đọc màn hình
-     bỏ qua chúng ở đây: chúng sẽ được đọc trong một mạch sau khi bắt đầu */
-  tenWeb.setAttribute("aria-hidden", "true");
-  khuGioiThieu.setAttribute("aria-hidden", "true");
-
-  tenWeb.hidden = false;
+  tenWeb.hidden = true;
   phanTinh.hidden = false;
   nhacTab.hidden = false;
   khuGioiThieu.hidden = true;
@@ -183,7 +211,6 @@ function hienManBatDau() {
 function batDauWeb() {
   if (daBatDau) return;
   daBatDau = true;
-  document.title = TEN_TRANG;
   /* Chờ một nhịp ngắn cho con trỏ ổn định rồi mới chuyển màn */
   setTimeout(hienHoiHuongDan, 0);
 }
@@ -196,25 +223,24 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-/* ===== MÀN HÌNH 0: HỎI CÓ CẦN NGHE HƯỚNG DẪN KHÔNG =====
-   Tiêu đề của màn này chứa cả tên web và phần giới thiệu (phần chữ ẩn),
-   để trình đọc màn hình đọc liền một mạch: tên web, giới thiệu, câu hỏi. */
+/* ===== MÀN HÌNH 0: TÊN WEB, GIỚI THIỆU, HỎI CÓ CẦN NGHE HƯỚNG DẪN KHÔNG =====
+   Tên web, lời giới thiệu và câu hỏi cùng hiện trên màn hình trong một khối,
+   nên trình đọc màn hình đọc liền một mạch đúng những chữ đang hiện. */
 function hienHoiHuongDan() {
-  tenWeb.hidden = false;
-  phanTinh.hidden = false;
-  khuGioiThieu.hidden = false;
-  nhacTab.hidden = true;
+  tenWeb.hidden = true;
+  phanTinh.hidden = true;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
 
   const loiGioiThieu = khuGioiThieu.querySelector("p").textContent.replace(/\s+/g, " ").trim();
-  const chuAn = 'position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;';
 
   manHinh.innerHTML =
     '<h2 id="tieu-de-man">' +
-      '<span style="' + chuAn + '">' + bocEn("EarEng") + ' — Học từ vựng tiếng Anh bằng tai. ' +
-      'Giới thiệu: ' + loiGioiThieu + ' </span>' +
-      'Bạn có cần nghe hướng dẫn sử dụng không?' +
+      '<span style="display:block;font-size:34px;margin-bottom:14px;">' +
+        bocEn("EarEng") + ' — Học từ vựng tiếng Anh bằng tai. </span>' +
+      '<span style="display:block;font-size:22px;font-weight:normal;margin-bottom:14px;">' +
+        'Giới thiệu: ' + loiGioiThieu + ' </span>' +
+      '<span style="display:block;">Bạn có cần nghe hướng dẫn sử dụng không?</span>' +
     '</h2>' +
     '<button id="nut-co">Có, nghe hướng dẫn</button> ' +
     '<button id="nut-khong">Không, vào học luôn</button>' +
@@ -347,12 +373,12 @@ function hienThe() {
 
   manHinh.innerHTML = html;
 
-  khiBam("nut-nghe-tu", function () { docLen(bocEn(the.en)); });
+  khiBam("nut-nghe-tu", function () { phatAmAnh(the.en, false); });
 
   const nutDanhVan = document.getElementById("nut-danh-van");
   if (nutDanhVan) {
     nutDanhVan.addEventListener("click", function () {
-      docLen(bocEn(the.en.toLowerCase().split("").join(", ")));
+      phatAmAnh(the.en.toLowerCase().split("").join(", "), true);
     });
   }
 
@@ -494,13 +520,13 @@ function hienCauHoi() {
 
   const nutNgheTu = document.getElementById("nut-nghe-tu");
   if (nutNgheTu) {
-    nutNgheTu.addEventListener("click", function () { docLen(bocEn(the.en)); });
+    nutNgheTu.addEventListener("click", function () { phatAmAnh(the.en, false); });
   }
 
   const nutDanhVan = document.getElementById("nut-danh-van");
   if (nutDanhVan) {
     nutDanhVan.addEventListener("click", function () {
-      docLen(bocEn(the.en.toLowerCase().split("").join(", ")));
+      phatAmAnh(the.en.toLowerCase().split("").join(", "), true);
     });
   }
 
@@ -577,5 +603,5 @@ function hienKetThuc() {
 
 /* ===== KHỞI ĐỘNG =====
    Không tự đặt con trỏ lúc mở trang, để trình đọc màn hình tự đọc từ đầu trang:
-   tên tab, rồi câu "Để bắt đầu, nhấn phím Tab một lần". */
+   câu "Để bắt đầu, nhấn phím Tab một lần". */
 hienManBatDau();
