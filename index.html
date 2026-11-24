@@ -2,18 +2,21 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>EarEng — Học từ vựng tiếng Anh bằng tai</title>
+  <title>Để bắt đầu, nhấn phím Tab một lần. Sau đó dùng phím mũi tên để di chuyển và nhấn Enter để chọn.</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="tuong-phan-cao">
   <main>
-    <h1><span lang="en">EarEng</span> — Học từ vựng tiếng Anh bằng tai</h1>
+    <h1 hidden><span lang="en">EarEng</span> — Học từ vựng tiếng Anh bằng tai</h1>
 
     <div id="phan-tinh">
-      <p><strong>Để bắt đầu, nhấn phím Tab một lần.</strong>
+      <!-- Câu này hiện trên màn hình. Trình đọc màn hình đọc nó qua tên trang (thẻ title)
+           nên ở đây đánh dấu aria-hidden để không bị đọc hai lần. -->
+      <p aria-hidden="true"><strong>Để bắt đầu, nhấn phím Tab một lần.</strong>
       Sau đó dùng phím mũi tên để di chuyển và nhấn Enter để chọn.</p>
+      <span id="diem-bat-dau" tabindex="0"></span>
 
-      <section id="gioi-thieu">
+      <section id="gioi-thieu" hidden>
         <h2>Giới thiệu</h2>
         <p><span lang="en">EarEng</span> là trang web học từ vựng tiếng Anh dành cho người khiếm thị,
         dùng hoàn toàn bằng bàn phím và trình đọc màn hình.
@@ -28,14 +31,13 @@
         <p>Bạn chỉ cần 3 loại phím:
         phím mũi tên (lên, xuống, trái, phải) để di chuyển giữa các lựa chọn;
         phím Enter hoặc phím cách (Space) để chọn;
-        phím Tab để bắt đầu: khi vừa mở web, hoặc khi vừa nghe xong một đoạn chữ dài,
-        nhấn Tab một lần để đi vào các nút, rồi dùng mũi tên như bình thường.
+        phím Tab chỉ dùng một lần, lúc vừa mở web, để bắt đầu.
         Di chuyển tới lựa chọn nào, máy sẽ đọc lựa chọn đó.
         Khi đi hết danh sách, mũi tên sẽ quay vòng về đầu.
         Website không có ô nhập chữ nào, bạn không bao giờ cần gõ đáp án.</p>
 
         <h3>Phần 2: Màn hình đầu tiên</h3>
-        <p>Vừa mở web, nhấn Tab một lần. Máy hỏi bạn có cần nghe hướng dẫn không.
+        <p>Vừa mở web, nhấn Tab một lần. Máy đọc tên web, lời giới thiệu, rồi hỏi bạn có cần nghe hướng dẫn không.
         Chọn "Có" để nghe phần hướng dẫn này, chọn "Không" để vào thẳng danh sách bộ từ.
         Trong danh sách bộ từ luôn có nút "Nghe lại hướng dẫn sử dụng" nếu bạn cần.</p>
 
@@ -76,15 +78,12 @@
         <h3>Phần 7: Liên hệ</h3>
         <p>Nếu bạn muốn thêm bộ từ vựng mới, hãy liên hệ Trân qua số điện thoại
         <strong>0943 447 577</strong>.</p>
-
-        <p><strong>Đã hết phần hướng dẫn. Nhấn phím Tab một lần để tới nút
-        "Đã nghe xong hướng dẫn, vào học", rồi nhấn Enter.</strong></p>
       </section>
     </div>
 
     <div id="man-hinh" role="application"></div>
 
-    <button id="nut-doi-mau">Đổi chế độ màu</button>
+    <button id="nut-doi-mau" hidden>Đổi chế độ màu</button>
 
     <p id="thong-bao" aria-live="polite"></p>
   </main>
