@@ -4,7 +4,7 @@
    Mở web: máy đọc "nhấn Tab để bắt đầu". Nhấn Tab: máy đọc liền một mạch
    tên web → giới thiệu → hỏi "có cần nghe hướng dẫn không?"
    → (hướng dẫn) → danh sách bộ từ.
-   - Máy chỉ đọc đúng những gì đang hiện trên màn hình, không có chữ ẩn.
+   - Máy chỉ đọc đúng những gì đang hiện trên màn hình, mỗi chữ một lần.
    - Phát âm tiếng Anh dùng giọng tiếng Anh của trình duyệt / Windows.
    - Điều hướng: mũi tên 4 chiều nhảy giữa các nút, tới nút nào đọc
      nút đó; Enter / Space để chọn. Tab vẫn dùng được.
@@ -61,6 +61,11 @@ function boChuNut() {
   });
 }
 new MutationObserver(boChuNut).observe(manHinh, { childList: true, subtree: true });
+
+/* Khối chữ mở đầu mỗi màn: con trỏ được đặt vào đây để trình đọc màn hình đọc nó.
+   Khai báo role="menuitem" để không bị đọc thêm chữ "tiêu đề". */
+const MO_KHOI = '<div id="tieu-de-man" role="menuitem" style="font-size:28px;' +
+                'font-weight:bold;line-height:1.5;margin:18px 0;outline:none;">';
 
 /* Nút đổi màu nằm ngay trong khu vực học (ở màn hỏi hướng dẫn và màn danh sách) */
 const NUT_MAU_HTML = ' <button type="button" id="nut-mau-trong">Đổi chế độ màu</button>';
@@ -187,11 +192,19 @@ function khiBam(id, ham) {
   document.getElementById(id).addEventListener("click", ham);
 }
 
-/* ===== MÀN BẮT ĐẦU: vừa mở web =====
-   Trang chỉ có câu "Để bắt đầu, nhấn phím Tab một lần" và một nút.
-   Trình đọc màn hình tự đọc câu đó khi trang mở. Nhấn Tab (con trỏ vào nút)
-   là web bắt đầu luôn, không cần nhấn thêm phím nào.
-   Nguyên tắc: máy chỉ đọc đúng những gì đang hiện trên màn hình, không có chữ ẩn. */
+/* ===== NGUYÊN TẮC ĐỌC =====
+   Trình đọc màn hình chỉ được đọc đúng những chữ đang hiện trên màn hình, mỗi chữ một lần.
+   - Không có chữ ẩn, không có nhãn ẩn.
+   - Khối chữ đầu mỗi màn và các nút đều khai báo role="menuitem", để trình đọc màn hình
+     không tự thêm các chữ như "nút" hay "tiêu đề cấp 2".
+
+   ===== MÀN BẮT ĐẦU: vừa mở web =====
+   Màn hình chỉ có một câu: "Để bắt đầu, nhấn phím Tab một lần. Sau đó...".
+   Khi mở trang, trình đọc màn hình luôn đọc tên trang (thẻ title), nên tên trang
+   lúc này chính là câu đó. Nhờ vậy câu được đọc đúng một lần.
+   Nhấn Tab là web bắt đầu luôn. */
+const TEN_TRANG = "EarEng — Học từ vựng tiếng Anh bằng tai";
+const diemBatDau = document.getElementById("diem-bat-dau");
 let daBatDau = false;
 
 function hienManBatDau() {
@@ -201,23 +214,25 @@ function hienManBatDau() {
   khuGioiThieu.hidden = true;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
-  manHinh.innerHTML = '<button id="nut-khoi-dong">Bắt đầu</button>';
+  manHinh.innerHTML = "";
 
-  const nut = document.getElementById("nut-khoi-dong");
-  nut.addEventListener("focus", batDauWeb);   /* nhấn Tab là bắt đầu */
-  nut.addEventListener("click", batDauWeb);
+  diemBatDau.addEventListener("focus", batDauWeb);   /* nhấn Tab là bắt đầu */
+  document.addEventListener("click", batDauWeb);       /* người dùng chuột: bấm vào trang */
 }
 
 function batDauWeb() {
   if (daBatDau) return;
   daBatDau = true;
+  document.removeEventListener("click", batDauWeb);
+  document.title = TEN_TRANG;
   /* Chờ một nhịp ngắn cho con trỏ ổn định rồi mới chuyển màn */
   setTimeout(hienHoiHuongDan, 0);
 }
 
-/* Ở màn bắt đầu, Enter hoặc phím cách cũng bắt đầu được */
+/* Ở màn bắt đầu, Enter, phím cách hoặc mũi tên cũng bắt đầu được */
 document.addEventListener("keydown", function (e) {
-  if (!daBatDau && (e.key === "Enter" || e.key === " ")) {
+  if (daBatDau) return;
+  if (e.key === "Enter" || e.key === " " || e.key.indexOf("Arrow") === 0) {
     e.preventDefault();
     batDauWeb();
   }
@@ -229,19 +244,18 @@ document.addEventListener("keydown", function (e) {
 function hienHoiHuongDan() {
   tenWeb.hidden = true;
   phanTinh.hidden = true;
-  khuHuongDan.hidden = true;
   thongBao.textContent = "";
 
   const loiGioiThieu = khuGioiThieu.querySelector("p").textContent.replace(/\s+/g, " ").trim();
 
   manHinh.innerHTML =
-    '<h2 id="tieu-de-man">' +
+    MO_KHOI +
       '<span style="display:block;font-size:34px;margin-bottom:14px;">' +
         bocEn("EarEng") + ' — Học từ vựng tiếng Anh bằng tai. </span>' +
       '<span style="display:block;font-size:22px;font-weight:normal;margin-bottom:14px;">' +
         'Giới thiệu: ' + loiGioiThieu + ' </span>' +
       '<span style="display:block;">Bạn có cần nghe hướng dẫn sử dụng không?</span>' +
-    '</h2>' +
+    '</div>' +
     '<button id="nut-co">Có, nghe hướng dẫn</button> ' +
     '<button id="nut-khong">Không, vào học luôn</button>' +
     NUT_MAU_HTML;
@@ -253,22 +267,34 @@ function hienHoiHuongDan() {
   focusVao(document.getElementById("tieu-de-man"));
 }
 
-/* ===== MÀN HÌNH HƯỚNG DẪN (nội dung tĩnh nằm trong index.html) ===== */
+/* ===== MÀN HÌNH HƯỚNG DẪN =====
+   Nội dung lấy từ phần hướng dẫn viết sẵn trong index.html.
+   Mỗi phần hiện thành một mục. Mũi tên xuống tới mục nào, máy đọc mục đó. */
 function hienHuongDan() {
-  /* Màn hướng dẫn chỉ hiện phần hướng dẫn, không lặp lại tên web và giới thiệu */
   tenWeb.hidden = true;
-  khuGioiThieu.hidden = true;
-  nhacTab.hidden = true;
-  phanTinh.hidden = false;
-  khuHuongDan.hidden = false;
+  phanTinh.hidden = true;
   thongBao.textContent = "";
-  manHinh.innerHTML =
-    '<button id="nut-xong-hd">Đã nghe xong hướng dẫn, vào học</button>';
+
+  const gon = function (chu) { return chu.replace(/\s+/g, " ").trim(); };
+  const kieuMuc = 'display:block;width:100%;text-align:left;font-size:20px;' +
+                  'font-weight:normal;line-height:1.6;margin:10px 0;';
+
+  let html = MO_KHOI + 'Hướng dẫn sử dụng. ' +
+             'Nhấn mũi tên xuống để nghe từng phần.</div>';
+
+  khuHuongDan.querySelectorAll("h3").forEach(function (tieuDePhan) {
+    const noiDung = tieuDePhan.nextElementSibling;
+    html += '<button type="button" style="' + kieuMuc + '">' +
+            '<strong>' + gon(tieuDePhan.textContent) + '.</strong> ' +
+            gon(noiDung.textContent) + '</button>';
+  });
+
+  html += '<button id="nut-xong-hd">Đã nghe xong hướng dẫn, vào học</button>';
+  manHinh.innerHTML = html;
 
   khiBam("nut-xong-hd", hienDanhSachBo);
 
-  /* Focus vào tiêu đề "Hướng dẫn sử dụng" để NVDA bắt đầu đọc từ đó */
-  focusVao(khuHuongDan.querySelector("h2"));
+  focusVao(document.getElementById("tieu-de-man"));
 }
 
 /* ===== MÀN HÌNH 1: DANH SÁCH BỘ TỪ ===== */
@@ -279,7 +305,7 @@ function hienDanhSachBo() {
   phanTinh.hidden = true;
   khuHuongDan.hidden = true;
   thongBao.textContent = "";
-  let html = '<h2 id="tieu-de-man">Học từ vựng — chọn bộ từ</h2>' +
+  let html = MO_KHOI + 'Học từ vựng — chọn bộ từ</div>' +
              '<button id="nut-nghe-lai-hd">Nghe lại hướng dẫn sử dụng</button>' +
              '<ul class="danh-sach-bo">';
   CAC_BO_TU.forEach(function (bo, chiSo) {
@@ -307,7 +333,7 @@ function hienMenuBo() {
   phanTinh.hidden = true;    /* vào bộ từ: ẩn giới thiệu + hướng dẫn, 1 màn hình = 1 việc */
   thongBao.textContent = "";
   manHinh.innerHTML =
-    '<h2 id="tieu-de-man">Bộ từ: ' + boHienTai.ten + ' (' + boHienTai.tu.length + ' từ)</h2>' +
+    MO_KHOI + 'Bộ từ: ' + boHienTai.ten + ' (' + boHienTai.tu.length + ' từ)</div>' +
     '<button id="nut-hoc-moi">Học từ mới — nghe thẻ rồi làm bài tập</button> ' +
     '<button id="nut-on-tap">Ôn tập nhanh — ' + SO_CAU_ON_TAP + ' câu xáo trộn</button> ' +
     '<button id="nut-chon-bo">Chọn bộ khác</button>';
@@ -329,15 +355,16 @@ function hienMenuBo() {
 
 /* ===== LỜI HƯỚNG DẪN RIÊNG CỦA BỘ TỪ (nếu có) ===== */
 function hienGioiThieu() {
+  thongBao.textContent = "";
   manHinh.innerHTML =
-    '<h2 id="tieu-de-man">Hướng dẫn: ' + boHienTai.ten + '</h2>' +
-    '<p class="gioi-thieu">' + boHienTai.gioiThieu + '</p>' +
+    MO_KHOI +
+      '<span style="display:block;margin-bottom:12px;">Hướng dẫn: ' + boHienTai.ten + '. </span>' +
+      '<span style="display:block;font-size:24px;font-weight:normal;">' + boHienTai.gioiThieu + '</span>' +
+    '</div>' +
     '<button id="nut-bat-dau">Bắt đầu nghe thẻ</button>';
 
   khiBam("nut-bat-dau", batDauXemThe);
 
-  /* Đọc lời hướng dẫn qua vùng aria-live để chắc chắn được nghe */
-  thongBao.innerHTML = boHienTai.gioiThieu;
   focusVao(document.getElementById("tieu-de-man"));
 }
 
@@ -358,8 +385,8 @@ function hienThe() {
      phát âm tiếng Anh, đánh vần, nghe nghĩa, thẻ tiếp theo.
      Không nút nào biến mất, nên nghe lại bao nhiêu lần cũng được. */
   let html =
-    '<h2 id="tieu-de-man">Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length +
-    ': ' + bocEn(the.en) + '</h2>' +
+    MO_KHOI + 'Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length +
+    ': ' + bocEn(the.en) + '</div>' +
     '<button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button> ';
 
   if (the.en.indexOf(" ") === -1) {
@@ -368,8 +395,7 @@ function hienThe() {
 
   html += '<button type="button" id="nut-nghe-nghia">Nghe nghĩa</button> ' +
           '<button type="button" id="nut-the-tiep">' +
-          (laTheCuoi ? 'Hết thẻ — sang phần bài tập' : 'Thẻ tiếp theo') + '</button>' +
-          '<div id="mat-sau"></div>';
+          (laTheCuoi ? 'Hết thẻ — sang phần bài tập' : 'Thẻ tiếp theo') + '</button>';
 
   manHinh.innerHTML = html;
 
@@ -383,10 +409,8 @@ function hienThe() {
   }
 
   khiBam("nut-nghe-nghia", function () {
-    /* Hiện nghĩa trên thẻ và cho trình đọc màn hình đọc lên */
-    const cauNghia = bocEn(the.en) + ' nghĩa là: ' + the.vi;
-    document.getElementById("mat-sau").innerHTML = '<p class="nghia">' + cauNghia + '</p>';
-    docLen(cauNghia);
+    /* Hiện nghĩa ở vùng thông báo phía dưới; trình đọc màn hình đọc đúng dòng đó */
+    docLen(bocEn(the.en) + ' nghĩa là: ' + the.vi);
   });
 
   khiBam("nut-the-tiep", function () {
@@ -406,7 +430,7 @@ function hienChuyenGiaiDoan() {
   const loi = 'Bạn đã nghe hết ' + boHienTai.tu.length + ' thẻ của bộ "' + boHienTai.ten +
               '". Giờ làm bài tập để kiểm tra nhé. Trả lời sai thì câu hỏi sẽ quay lại cho tới khi đúng.';
   manHinh.innerHTML =
-    '<h2 id="tieu-de-man">' + loi + '</h2>' +
+    MO_KHOI + loi + '</div>' +
     '<button id="nut-bt-thu-tu">Làm bài tập theo thứ tự</button> ' +
     '<button id="nut-bt-tron">Làm bài tập xáo trộn</button> ' +
     '<button id="nut-xem-lai">Nghe lại thẻ từ đầu</button> ' +
@@ -434,9 +458,9 @@ function hienChuyenGiaiDoan() {
 function hienLuuYBaiTap(batDau) {
   thongBao.textContent = "";
   manHinh.innerHTML =
-    '<h2 id="tieu-de-man">Lưu ý trước khi làm bài: trả lời đúng sẽ có một tiếng vui, ' +
+    MO_KHOI + 'Lưu ý trước khi làm bài: trả lời đúng sẽ có một tiếng vui, ' +
     'trả lời sai sẽ có một tiếng trầm. Kết quả cũng được đọc bằng lời. ' +
-    'Câu trả lời sai sẽ quay lại sau vài câu.</h2>' +
+    'Câu trả lời sai sẽ quay lại sau vài câu.</div>' +
     '<button id="nut-bat-dau-bai">Bắt đầu làm bài</button> ' +
     '<button id="nut-thu-dung">Nghe thử tiếng đúng</button> ' +
     '<button id="nut-thu-sai">Nghe thử tiếng sai</button>';
@@ -501,7 +525,7 @@ function hienCauHoi() {
   const kieuDapAn = 'display:block;width:100%;text-align:left;font-size:24px;' +
                     'padding:16px 18px;margin:10px 0;';
 
-  let html = '<h2 id="tieu-de-man">Câu hỏi còn lại: ' + coc.length + ' — ' + cauHoi + '</h2>';
+  let html = MO_KHOI + 'Câu hỏi còn lại: ' + coc.length + ' — ' + cauHoi + '</div>';
 
   baLuaChon.forEach(function (luaChon, i) {
     const noiDung = (chieu === "en2vi") ? luaChon.vi : bocEn(luaChon.en);
@@ -577,7 +601,7 @@ function hienKetThuc() {
 
   if (cheDoOnTap) {
     manHinh.innerHTML =
-      '<h2 id="tieu-de-man">Xong bài ôn tập! ' + tongKet + '</h2>' +
+      MO_KHOI + 'Xong bài ôn tập! ' + tongKet + '</div>' +
       '<button id="nut-on-lai">Ôn tập lại với câu hỏi mới</button> ' +
       '<button id="nut-ve-menu">Về menu bộ từ</button> ' +
       '<button id="nut-chon-bo">Chọn bộ khác</button>';
@@ -587,7 +611,7 @@ function hienKetThuc() {
     khiBam("nut-chon-bo", hienDanhSachBo);
   } else {
     manHinh.innerHTML =
-      '<h2 id="tieu-de-man">Xong bài tập! ' + tongKet + '</h2>' +
+      MO_KHOI + 'Xong bài tập! ' + tongKet + '</div>' +
       '<button id="nut-lam-lai">Làm lại bài tập xáo trộn</button> ' +
       '<button id="nut-xem-the">Nghe lại thẻ từ đầu</button> ' +
       '<button id="nut-chon-bo">Chọn bộ khác</button>';
@@ -602,6 +626,6 @@ function hienKetThuc() {
 }
 
 /* ===== KHỞI ĐỘNG =====
-   Không tự đặt con trỏ lúc mở trang, để trình đọc màn hình tự đọc từ đầu trang:
-   câu "Để bắt đầu, nhấn phím Tab một lần". */
+   Không tự đặt con trỏ lúc mở trang. Trình đọc màn hình đọc tên trang,
+   chính là câu "Để bắt đầu, nhấn phím Tab một lần..." đang hiện trên màn hình. */
 hienManBatDau();
