@@ -19,12 +19,7 @@
 
 const manHinh = document.getElementById("man-hinh");
 const thongBao = document.getElementById("thong-bao");
-const phanTinh = document.getElementById("phan-tinh");     // giới thiệu + hướng dẫn
-const khuHuongDan = document.getElementById("huong-dan");  // riêng phần hướng dẫn
-const nutDoiMau = document.getElementById("nut-doi-mau");  // nằm ngay sau khu vực học
-const tenWeb = document.querySelector("h1");                // tên web ở đầu trang
-const khuGioiThieu = document.getElementById("gioi-thieu"); // phần giới thiệu
-const nhacTab = phanTinh.querySelector("p");               // câu "Để bắt đầu, nhấn Tab"
+const phanTinh = document.getElementById("phan-tinh");     // câu "Để bắt đầu, nhấn Tab"
 
 const SO_CAU_ON_TAP = 6;   // số câu của một bài ôn tập nhanh
 
@@ -35,6 +30,29 @@ let tongSoThe = 0;
 let soLanSai = 0;
 let dangTron = false;   // bài tập có xáo trộn không
 let cheDoOnTap = false; // đang làm ôn tập nhanh hay bài tập thường
+
+/* ===== LỜI GIỚI THIỆU VÀ HƯỚNG DẪN =====
+   Chữ nằm ở đây, chỉ được đưa lên trang khi tới màn hình cần hiện nó.
+   Trang không giữ sẵn chữ ẩn nào. */
+const LOI_GIOI_THIEU =
+  'EarEng là trang web học từ vựng tiếng Anh dành cho người khiếm thị, dùng hoàn toàn bằng bàn phím và trình đọc màn hình. Không cần gõ chữ, không cần nhìn màn hình: chỉ cần nghe, chọn và nhấn phím. Không cần tài khoản, không lưu lại gì.';
+
+const CAC_PHAN_HUONG_DAN = [
+  { tieuDe: 'Phần 1: Các phím cần dùng',
+    noiDung: 'Bạn chỉ cần 3 loại phím: phím mũi tên (lên, xuống, trái, phải) để di chuyển giữa các lựa chọn; phím Enter hoặc phím cách (Space) để chọn; phím Tab chỉ dùng một lần, lúc vừa mở web, để bắt đầu. Di chuyển tới lựa chọn nào, máy sẽ đọc lựa chọn đó. Khi đi hết danh sách, mũi tên sẽ quay vòng về đầu. Website không có ô nhập chữ nào, bạn không bao giờ cần gõ đáp án.' },
+  { tieuDe: 'Phần 2: Màn hình đầu tiên',
+    noiDung: 'Vừa mở web, nhấn Tab một lần. Máy đọc tên web, lời giới thiệu, rồi hỏi bạn có cần nghe hướng dẫn không. Chọn "Có" để nghe phần hướng dẫn này, chọn "Không" để vào thẳng danh sách bộ từ. Trong danh sách bộ từ luôn có nút "Nghe lại hướng dẫn sử dụng" nếu bạn cần.' },
+  { tieuDe: 'Phần 3: Chọn bộ từ và học từ mới',
+    noiDung: 'Dùng mũi tên để đi qua các bộ từ, tới bộ nào máy đọc tên bộ đó cùng số từ, nhấn Enter để vào. Trong menu của bộ từ, chọn "Học từ mới". Máy sẽ đọc từng thẻ theo thứ tự, và luôn đọc từ tiếng Anh trước. Mỗi thẻ có bốn lựa chọn, theo thứ tự: "Phát âm tiếng Anh" để nghe cách đọc từ; "Đọc từng chữ cái" để nghe cách viết; "Nghe nghĩa" để nghe nghĩa tiếng Việt; "Thẻ tiếp theo" để sang thẻ kế. Ba lựa chọn đầu có thể chọn lại nhiều lần để nghe lại. Nghe hết thẻ sẽ tới phần bài tập.' },
+  { tieuDe: 'Phần 4: Cách làm bài tập trắc nghiệm',
+    noiDung: 'Mỗi câu hỏi có 3 đáp án. Nhấn mũi tên xuống để đi vào đáp án thứ nhất, nhấn tiếp để qua đáp án thứ hai, thứ ba. Tới đáp án nào, máy đọc đáp án đó. Khi đã đứng ở đáp án mình muốn, nhấn Enter để trả lời. Trả lời đúng sẽ nghe một tiếng vui. Trả lời sai sẽ nghe một tiếng trầm, máy đọc đáp án đúng, và câu đó sẽ quay lại sau vài câu cho tới khi bạn trả lời đúng. Sau mỗi câu, nhấn Enter để qua câu tiếp theo.' },
+  { tieuDe: 'Phần 5: Hai kiểu bài tập và ôn tập nhanh',
+    noiDung: 'Sau khi nghe hết thẻ, bạn chọn "Bài tập theo thứ tự" (hỏi theo đúng thứ tự thẻ, luôn hỏi từ tiếng Anh sang nghĩa tiếng Việt) hoặc "Bài tập xáo trộn" (hỏi lộn xộn, hỏi cả hai chiều Anh sang Việt và Việt sang Anh). Ngoài ra, trong menu của mỗi bộ từ có "Ôn tập nhanh": bài trắc nghiệm ngắn 6 câu lấy ngẫu nhiên từ bộ đó. Mỗi lần vào ôn tập, câu hỏi được xáo mới, nên có thể ôn đi ôn lại nhiều lần.' },
+  { tieuDe: 'Phần 6: Đổi chế độ màu',
+    noiDung: 'Dành cho người còn nhìn được một phần. Nút "Đổi chế độ màu" nằm ngay sau hai nút "Có" và "Không" ở màn hình đầu tiên, và sau danh sách bộ từ. Nút này chuyển giữa nền đen chữ vàng và nền sáng chữ đen. Cả hai chế độ đều có độ tương phản cao đạt chuẩn. Lựa chọn được ghi nhớ cho những lần mở web sau.' },
+  { tieuDe: 'Phần 7: Liên hệ',
+    noiDung: 'Nếu bạn muốn thêm bộ từ vựng mới, hãy liên hệ Trân qua số điện thoại 0943 447 577.' }
+];
 
 /* ===== CHẾ ĐỘ MÀU (mặc định tương phản cao) ===== */
 if (localStorage.getItem("cheDoMau") === "sang") {
@@ -47,9 +65,6 @@ function doiCheDoMau() {
   localStorage.setItem("cheDoMau", dangCao ? "cao" : "sang");
   docLen(dangCao ? "Đã chuyển sang nền đen chữ vàng." : "Đã chuyển sang nền sáng chữ đen.");
 }
-
-/* Nút đổi màu cũ nằm ngoài khu vực học: không dùng nữa, luôn ẩn */
-nutDoiMau.hidden = true;
 
 /* ===== BỎ CHỮ "NÚT" KHI TRÌNH ĐỌC MÀN HÌNH ĐỌC =====
    Mặc định, trình đọc màn hình đọc tên nút rồi thêm chữ "nút".
@@ -279,7 +294,8 @@ function khiBam(id, ham) {
 
 /* ===== NGUYÊN TẮC ĐỌC =====
    Trình đọc màn hình chỉ được đọc đúng những chữ đang hiện trên màn hình, mỗi chữ một lần.
-   - Không có chữ ẩn, không có nhãn ẩn.
+   - Trang không chứa chữ ẩn, không có nhãn ẩn. Chữ của màn nào chỉ được đưa lên trang
+     khi tới màn đó, và bị xóa hẳn khi sang màn khác.
    - Khối chữ đầu mỗi màn và các nút đều khai báo role="menuitem", để trình đọc màn hình
      không tự thêm các chữ như "nút" hay "tiêu đề cấp 2".
 
@@ -293,11 +309,6 @@ const diemBatDau = document.getElementById("diem-bat-dau");
 let daBatDau = false;
 
 function hienManBatDau() {
-  tenWeb.hidden = true;
-  phanTinh.hidden = false;
-  nhacTab.hidden = false;
-  khuGioiThieu.hidden = true;
-  khuHuongDan.hidden = true;
   thongBao.textContent = "";
   manHinh.innerHTML = "";
 
@@ -327,18 +338,16 @@ document.addEventListener("keydown", function (e) {
    Tên web, lời giới thiệu và câu hỏi cùng hiện trên màn hình trong một khối,
    nên trình đọc màn hình đọc liền một mạch đúng những chữ đang hiện. */
 function hienHoiHuongDan() {
-  tenWeb.hidden = true;
-  phanTinh.hidden = true;
+  /* Xóa hẳn câu mở đầu khỏi trang (không ẩn, mà xóa) */
+  if (phanTinh.parentNode) phanTinh.parentNode.removeChild(phanTinh);
   thongBao.textContent = "";
-
-  const loiGioiThieu = khuGioiThieu.querySelector("p").textContent.replace(/\s+/g, " ").trim();
 
   manHinh.innerHTML =
     MO_KHOI +
       '<span style="display:block;font-size:34px;margin-bottom:14px;">' +
         bocEn("EarEng") + ' — Học từ vựng tiếng Anh bằng tai. </span>' +
       '<span style="display:block;font-size:22px;font-weight:normal;margin-bottom:14px;">' +
-        'Giới thiệu: ' + loiGioiThieu + ' </span>' +
+        'Giới thiệu: ' + LOI_GIOI_THIEU + ' </span>' +
       '<span style="display:block;">Bạn có cần nghe hướng dẫn sử dụng không?</span>' +
     '</div>' +
     '<button id="nut-co">Có, nghe hướng dẫn</button> ' +
@@ -353,25 +362,20 @@ function hienHoiHuongDan() {
 }
 
 /* ===== MÀN HÌNH HƯỚNG DẪN =====
-   Nội dung lấy từ phần hướng dẫn viết sẵn trong index.html.
+   Nội dung lấy từ CAC_PHAN_HUONG_DAN ở đầu file này.
    Mỗi phần hiện thành một mục. Mũi tên xuống tới mục nào, máy đọc mục đó. */
 function hienHuongDan() {
-  tenWeb.hidden = true;
-  phanTinh.hidden = true;
   thongBao.textContent = "";
 
-  const gon = function (chu) { return chu.replace(/\s+/g, " ").trim(); };
   const kieuMuc = 'display:block;width:100%;text-align:left;font-size:20px;' +
                   'font-weight:normal;line-height:1.6;margin:10px 0;';
 
   let html = MO_KHOI + 'Hướng dẫn sử dụng. ' +
              'Nhấn mũi tên xuống để nghe từng phần.</div>';
 
-  khuHuongDan.querySelectorAll("h3").forEach(function (tieuDePhan) {
-    const noiDung = tieuDePhan.nextElementSibling;
+  CAC_PHAN_HUONG_DAN.forEach(function (phan) {
     html += '<button type="button" style="' + kieuMuc + '">' +
-            '<strong>' + gon(tieuDePhan.textContent) + '.</strong> ' +
-            gon(noiDung.textContent) + '</button>';
+            '<strong>' + phan.tieuDe + '.</strong> ' + phan.noiDung + '</button>';
   });
 
   html += '<button id="nut-xong-hd">Đã nghe xong hướng dẫn, vào học</button>';
@@ -384,11 +388,6 @@ function hienHuongDan() {
 
 /* ===== MÀN HÌNH 1: DANH SÁCH BỘ TỪ ===== */
 function hienDanhSachBo() {
-  /* Từ đây trở đi ẩn tên web và phần giới thiệu,
-     để trình đọc màn hình không đọc lại chúng ở mỗi màn */
-  tenWeb.hidden = true;
-  phanTinh.hidden = true;
-  khuHuongDan.hidden = true;
   thongBao.textContent = "";
   let html = MO_KHOI + 'Học từ vựng — chọn bộ từ</div>' +
              '<button id="nut-nghe-lai-hd">Nghe lại hướng dẫn sử dụng</button>' +
@@ -414,8 +413,6 @@ function hienDanhSachBo() {
 
 /* ===== MENU CỦA MỘT BỘ TỪ ===== */
 function hienMenuBo() {
-  tenWeb.hidden = true;
-  phanTinh.hidden = true;    /* vào bộ từ: ẩn giới thiệu + hướng dẫn, 1 màn hình = 1 việc */
   thongBao.textContent = "";
   manHinh.innerHTML =
     MO_KHOI + 'Bộ từ: ' + boHienTai.ten + ' (' + boHienTai.tu.length + ' từ)</div>' +
@@ -494,7 +491,7 @@ function hienThe() {
   khiBam("nut-nghe-nghia", function () {
     /* Hiện nghĩa ở vùng thông báo phía dưới; trình đọc màn hình đọc đúng dòng đó */
     dungPhatAm();
-    docLen('Nghĩa là: ' + the.vi);
+    docLen('Nghĩa là: ' + the.vi + '.');
   });
 
   khiBam("nut-the-tiep", function () {
