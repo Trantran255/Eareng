@@ -553,3 +553,250 @@ function hienThe() {
      Không nút nào biến mất, nên nghe lại bao nhiêu lần cũng được. */
   let html =
     MO_KHOI + 'Thẻ ' + (viTriThe + 1) + ' trên ' + boHienTai.tu.length + '.' +
+    hienTuAnh(the.en) + '</div>' +
+    '<button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button> ';
+
+  if (the.en.indexOf(" ") === -1) {
+    html += '<button type="button" id="nut-danh-van">Đọc từng chữ cái</button> ';
+  }
+
+  html += '<button type="button" id="nut-nghe-nghia">Nghe nghĩa</button> ' +
+          '<button type="button" id="nut-the-tiep">' +
+          (laTheCuoi ? 'Hết thẻ — sang phần bài tập' : 'Thẻ tiếp theo') + '</button>';
+
+  manHinh.innerHTML = html;
+
+  khiBam("nut-nghe-tu", function () { phatAmTuDien(the.en); });
+
+  const nutDanhVan = document.getElementById("nut-danh-van");
+  if (nutDanhVan) {
+    nutDanhVan.addEventListener("click", function () { docTungChu(the.en); });
+  }
+
+  khiBam("nut-nghe-nghia", function () {
+    /* Hiện nghĩa ở vùng thông báo phía dưới; trình đọc màn hình đọc đúng dòng đó */
+    dungPhatAm();
+    docLen('Nghĩa là: ' + the.vi + '.');
+  });
+
+  khiBam("nut-the-tiep", function () {
+    if (laTheCuoi) {
+      hienChuyenGiaiDoan();
+    } else {
+      viTriThe++;
+      hienThe();
+    }
+  });
+
+  focusVao(document.getElementById("tieu-de-man"));
+  /* Chờ máy đọc xong "Thẻ ... trên ..." rồi tự phát âm từ tiếng Anh */
+  tuPhatSau(the.en, 1800);
+}
+
+/* ===== MÀN CHUYỂN: nghe thẻ xong, chọn việc tiếp theo ===== */
+function hienChuyenGiaiDoan() {
+  const loi = 'Bạn đã nghe hết ' + boHienTai.tu.length + ' thẻ của bộ "' + boHienTai.ten +
+              '". Giờ làm bài tập để kiểm tra nhé. Trả lời sai thì câu hỏi sẽ quay lại cho tới khi đúng.';
+  manHinh.innerHTML =
+    MO_KHOI + loi + '</div>' +
+    '<button id="nut-bt-thu-tu">Làm bài tập theo thứ tự</button> ' +
+    '<button id="nut-bt-tron">Làm bài tập xáo trộn</button> ' +
+    '<button id="nut-xem-lai">Nghe lại thẻ từ đầu</button> ' +
+    '<button id="nut-chon-bo">Chọn bộ khác</button>';
+
+  khiBam("nut-bt-thu-tu", function () {
+    hienLuuYBaiTap(function () { batDauBaiTap(false); });
+  });
+  khiBam("nut-bt-tron", function () {
+    hienLuuYBaiTap(function () { batDauBaiTap(true); });
+  });
+  khiBam("nut-xem-lai", batDauXemThe);
+  khiBam("nut-chon-bo", hienDanhSachBo);
+
+  thongBao.textContent = "";
+  focusVao(document.getElementById("tieu-de-man"));
+}
+
+/* ============================================================
+   GIAI ĐOẠN 2 — BÀI TẬP TRẮC NGHIỆM + SRS TRONG BUỔI
+   ============================================================ */
+
+/* ===== MÀN LƯU Ý TRƯỚC KHI LÀM BÀI: báo trước tiếng đúng và tiếng sai =====
+   batDau là hàm sẽ chạy khi người học chọn "Bắt đầu làm bài". */
+function hienLuuYBaiTap(batDau) {
+  thongBao.textContent = "";
+  manHinh.innerHTML =
+    MO_KHOI + 'Lưu ý trước khi làm bài: trả lời đúng sẽ có một tiếng vui, ' +
+    'trả lời sai sẽ có một tiếng trầm. Kết quả cũng được đọc bằng lời. ' +
+    'Câu trả lời sai sẽ quay lại sau vài câu.</div>' +
+    '<button id="nut-bat-dau-bai">Bắt đầu làm bài</button> ' +
+    '<button id="nut-thu-dung">Nghe thử tiếng đúng</button> ' +
+    '<button id="nut-thu-sai">Nghe thử tiếng sai</button>';
+
+  khiBam("nut-bat-dau-bai", batDau);
+  khiBam("nut-thu-dung", function () {
+    phatAmThanh(true);
+    thongBao.textContent = "Đây là tiếng khi trả lời đúng.";
+  });
+  khiBam("nut-thu-sai", function () {
+    phatAmThanh(false);
+    thongBao.textContent = "Đây là tiếng khi trả lời sai.";
+  });
+
+  focusVao(document.getElementById("tieu-de-man"));
+}
+
+function batDauBaiTap(tron) {
+  cheDoOnTap = false;
+  dangTron = tron;
+  coc = boHienTai.tu.slice();
+  if (tron) {
+    tronMang(coc);
+  }
+  tongSoThe = coc.length;
+  soLanSai = 0;
+  hienCauHoi();
+}
+
+/* Ôn tập nhanh: lấy ngẫu nhiên vài câu, mỗi lần vào xáo bộ câu mới */
+function batDauOnTap() {
+  cheDoOnTap = true;
+  dangTron = true;   /* ôn tập luôn hỏi trộn 2 chiều */
+  coc = tronMang(boHienTai.tu.slice()).slice(0, SO_CAU_ON_TAP);
+  tongSoThe = coc.length;
+  soLanSai = 0;
+  hienCauHoi();
+}
+
+function hienCauHoi() {
+  if (coc.length === 0) { hienKetThuc(); return; }
+
+  thongBao.textContent = "";
+  const the = coc[0];
+
+  /* Theo thứ tự: luôn hỏi Anh → Việt (nhịp học).
+     Xáo trộn / ôn tập: random 2 chiều Anh ↔ Việt (nhịp kiểm tra). */
+  const chieu = dangTron
+    ? (Math.random() < 0.5 ? "en2vi" : "vi2en")
+    : "en2vi";
+
+  /* 2 đáp án nhiễu lấy từ chính bộ từ đang học */
+  const khac = tronMang(boHienTai.tu.filter(function (t) { return t.en !== the.en; }));
+  const baLuaChon = tronMang([the, khac[0], khac[1]]);
+
+  const cauHoi = (chieu === "en2vi")
+    ? 'Từ sau đây nghĩa là gì?' + hienTuAnh(the.en)
+    : '"' + the.vi + '" trong tiếng Anh là gì?';
+
+  /* Ba đáp án là ba nút. Mũi tên để tới đáp án (máy đọc đáp án đó),
+     Enter để trả lời luôn bằng đáp án đang đứng. */
+  const kieuDapAn = 'display:block;width:100%;text-align:left;font-size:24px;' +
+                    'padding:16px 18px;margin:10px 0;';
+
+  let html = MO_KHOI + 'Câu hỏi còn lại: ' + coc.length + ' — ' + cauHoi + '</div>';
+
+  baLuaChon.forEach(function (luaChon, i) {
+    const noiDung = (chieu === "en2vi") ? luaChon.vi : bocEn(luaChon.en);
+    html += '<button type="button" class="nut-dap-an" data-so="' + i + '" style="' + kieuDapAn + '">' +
+            noiDung + '</button>';
+  });
+
+  if (chieu === "en2vi") {
+    html += '<button type="button" id="nut-nghe-tu">Phát âm tiếng Anh</button> ';
+    if (the.en.indexOf(" ") === -1) {
+      html += '<button type="button" id="nut-danh-van">Đọc từng chữ cái</button>';
+    }
+  }
+
+  manHinh.innerHTML = html;
+
+  const nutNgheTu = document.getElementById("nut-nghe-tu");
+  if (nutNgheTu) {
+    nutNgheTu.addEventListener("click", function () { phatAmTuDien(the.en); });
+  }
+
+  const nutDanhVan = document.getElementById("nut-danh-van");
+  if (nutDanhVan) {
+    nutDanhVan.addEventListener("click", function () { docTungChu(the.en); });
+  }
+
+  document.querySelectorAll(".nut-dap-an").forEach(function (nut) {
+    nut.addEventListener("click", function () {
+      chamDiem(baLuaChon[Number(nut.dataset.so)], the, baLuaChon);
+    });
+  });
+
+  focusVao(document.getElementById("tieu-de-man"));
+  /* Hỏi từ tiếng Anh: chờ máy đọc xong câu hỏi rồi tự phát âm từ đó */
+  if (chieu === "en2vi") {
+    tuPhatSau(the.en, 3000);
+  }
+}
+
+function chamDiem(luaChon, the, baLuaChon) {
+  const dung = (luaChon.en === the.en);
+  dungPhatAm();
+  phatAmThanh(dung);
+
+  coc.shift();
+  if (dung) {
+    thongBao.innerHTML = 'Đúng rồi! ' + bocEn(the.en) + ' nghĩa là "' + the.vi + '".';
+  } else {
+    soLanSai++;
+    /* Sai: nhét câu hỏi lại vào cọc, cách 3 câu (SRS trong buổi) */
+    coc.splice(Math.min(3, coc.length), 0, the);
+    thongBao.innerHTML = 'Sai rồi. Đáp án đúng: ' + bocEn(the.en) +
+                         ' nghĩa là "' + the.vi + '". Câu này sẽ quay lại sau.';
+  }
+
+  /* Khóa ba đáp án, ghi chú đáp án đúng cho người nhìn được,
+     rồi thêm nút đi tiếp và đặt con trỏ vào đó */
+  document.querySelectorAll(".nut-dap-an").forEach(function (nut) {
+    nut.disabled = true;
+    if (baLuaChon[Number(nut.dataset.so)].en === the.en) {
+      nut.innerHTML += " (đáp án đúng)";
+    }
+  });
+
+  const nutTiep = document.createElement("button");
+  nutTiep.type = "button";
+  nutTiep.textContent = "Câu tiếp theo";
+  nutTiep.addEventListener("click", hienCauHoi);
+  manHinh.appendChild(nutTiep);
+  nutTiep.focus();
+}
+
+/* ===== MÀN HÌNH: KẾT THÚC BÀI TẬP / ÔN TẬP ===== */
+function hienKetThuc() {
+  const tongKet = 'Bộ "' + boHienTai.ten + '": ' + tongSoThe + ' câu, số lần trả lời sai: ' + soLanSai + '.';
+
+  if (cheDoOnTap) {
+    manHinh.innerHTML =
+      MO_KHOI + 'Xong bài ôn tập! ' + tongKet + '</div>' +
+      '<button id="nut-on-lai">Ôn tập lại với câu hỏi mới</button> ' +
+      '<button id="nut-ve-menu">Về menu bộ từ</button> ' +
+      '<button id="nut-chon-bo">Chọn bộ khác</button>';
+
+    khiBam("nut-on-lai", batDauOnTap);
+    khiBam("nut-ve-menu", hienMenuBo);
+    khiBam("nut-chon-bo", hienDanhSachBo);
+  } else {
+    manHinh.innerHTML =
+      MO_KHOI + 'Xong bài tập! ' + tongKet + '</div>' +
+      '<button id="nut-lam-lai">Làm lại bài tập xáo trộn</button> ' +
+      '<button id="nut-xem-the">Nghe lại thẻ từ đầu</button> ' +
+      '<button id="nut-chon-bo">Chọn bộ khác</button>';
+
+    khiBam("nut-lam-lai", function () { batDauBaiTap(true); });
+    khiBam("nut-xem-the", batDauXemThe);
+    khiBam("nut-chon-bo", hienDanhSachBo);
+  }
+
+  thongBao.textContent = "";
+  focusVao(document.getElementById("tieu-de-man"));
+}
+
+/* ===== KHỞI ĐỘNG =====
+   Không tự đặt con trỏ lúc mở trang, để trình đọc màn hình tự đọc từ đầu trang:
+   tên tab, rồi câu "Để bắt đầu, nhấn phím Tab một lần". */
+hienManBatDau();
