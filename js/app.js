@@ -251,16 +251,29 @@ function tuPhatSau(chu, miliGiay) {
   henGioPhat = setTimeout(function () { phatAmTuDien(chu); }, miliGiay);
 }
 
-/* Phát âm tên một chữ cái bằng bản thu từ điển.
-   Riêng chữ A: mục "a" trong từ điển Oxford là mạo từ (đọc là "ờ"), không phải tên chữ cái,
-   nên chữ A lấy bản thu tên chữ cái ở kho Wikimedia. */
+/* ===== PHÁT ÂM TÊN CHỮ CÁI =====
+   Từ điển không có bản thu riêng đáng tin cho từng chữ cái (mục "c", "a"... trong từ điển
+   thường là từ viết tắt hoặc mạo từ, đọc khác tên chữ cái). Vì vậy mỗi chữ cái dùng bản thu
+   từ điển Oxford của một từ đọc Y HỆT tên chữ cái đó, ví dụ chữ C dùng bản thu từ "sea".
+   Chữ nào không có từ đọc giống (A, D, E, K, W) thì dùng giọng tiếng Anh của máy. */
+const TU_DONG_AM = {
+  B: "bee",  C: "sea",   F: "eff", G: "gee", H: "aitch", I: "eye", J: "jay",
+  L: "el",   M: "em",    N: "en",  O: "oh",  P: "pea",   Q: "cue", R: "are",
+  S: "ess",  T: "tea",   U: "you", V: "vee", X: "ex",    Y: "why", Z: "zee"
+};
+
 function phatAmChuCai(chu) {
-  if (chu === "A") {
-    const wiki = "https://commons.wikimedia.org/wiki/Special:FilePath/En-us-";
-    phatAmTuDien("A", [wiki + "a.ogg", wiki + "A.ogg"]);
-  } else {
-    phatAmTuDien(chu);
+  const tu = TU_DONG_AM[chu];
+  if (!tu) {
+    dungPhatAm();
+    phatAmAnh(chu, true);
+    return;
   }
+  /* Nếu không tải được bản thu thì web tự chuyển sang giọng tiếng Anh của máy */
+  phatAmTuDien(chu, [
+    "https://ssl.gstatic.com/dictionary/static/sounds/oxford/" + tu + "--_us_1.mp3",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/En-us-" + tu + ".ogg"
+  ]);
 }
 
 /* Đọc từng chữ cái: mỗi chữ cái một nhịp, bằng giọng máy tiếng Anh */
