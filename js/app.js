@@ -41,7 +41,7 @@ const CAC_PHAN_HUONG_DAN = [
   { tieuDe: 'Phần 1: Các phím cần dùng',
     noiDung: 'Bạn chỉ cần 3 loại phím: phím mũi tên (lên, xuống, trái, phải) để di chuyển giữa các lựa chọn; phím Enter hoặc phím cách (Space) để chọn; phím Tab chỉ dùng một lần, lúc vừa mở web, để bắt đầu. Di chuyển tới lựa chọn nào, máy sẽ đọc lựa chọn đó. Khi đi hết danh sách, mũi tên sẽ quay vòng về đầu. Website không có ô nhập chữ nào, bạn không bao giờ cần gõ đáp án.' },
   { tieuDe: 'Phần 2: Màn hình đầu tiên',
-    noiDung: 'Vừa mở web, nhấn Tab một lần. Máy đọc tên web, lời giới thiệu, rồi hỏi bạn có cần nghe hướng dẫn không. Chọn "Có" để nghe phần hướng dẫn này, chọn "Không" để vào thẳng danh sách bộ từ. Trong danh sách bộ từ luôn có nút "Nghe lại hướng dẫn sử dụng" nếu bạn cần. Ngay sau nút đó là mục "Bảng chữ cái tiếng Anh": mỗi chữ cái có phát âm, cách đọc, và một từ ví dụ.' },
+    noiDung: 'Vừa mở web, nhấn Tab một lần. Máy đọc tên web, lời giới thiệu, rồi hỏi bạn có cần nghe hướng dẫn không. Chọn "Có" để nghe phần hướng dẫn này, chọn "Không" để vào thẳng danh sách bộ từ. Trong danh sách bộ từ luôn có nút "Nghe lại hướng dẫn sử dụng" nếu bạn cần. Ngay sau nút đó là mục "Bảng chữ cái tiếng Anh": mỗi chữ cái có phát âm theo từ điển và một từ ví dụ kèm nghĩa tiếng Việt.' },
   { tieuDe: 'Phần 3: Chọn bộ từ và học từ mới',
     noiDung: 'Dùng mũi tên để đi qua các bộ từ, tới bộ nào máy đọc tên bộ đó cùng số từ, nhấn Enter để vào. Trong menu của bộ từ, chọn "Học từ mới". Máy sẽ đọc từng thẻ theo thứ tự, và luôn đọc từ tiếng Anh trước. Mỗi thẻ có bốn lựa chọn, theo thứ tự: "Phát âm tiếng Anh" để nghe cách đọc từ; "Đọc từng chữ cái" để nghe cách viết; "Nghe nghĩa" để nghe nghĩa tiếng Việt; "Thẻ tiếp theo" để sang thẻ kế. Ba lựa chọn đầu có thể chọn lại nhiều lần để nghe lại. Nghe hết thẻ sẽ tới phần bài tập.' },
   { tieuDe: 'Phần 4: Cách làm bài tập trắc nghiệm',
@@ -55,35 +55,35 @@ const CAC_PHAN_HUONG_DAN = [
 ];
 
 /* ===== BẢNG CHỮ CÁI TIẾNG ANH =====
-   chu: chữ cái. doc: cách đọc tên chữ cái, ghi theo kiểu tiếng Việt.
-   viDu: một từ bắt đầu bằng (hoặc có chứa) chữ cái đó. nghia: nghĩa của từ ví dụ. */
+   chu: chữ cái. viDu: một từ bắt đầu bằng (hoặc có chứa) chữ cái đó.
+   nghia: nghĩa tiếng Việt của từ ví dụ. */
 const BANG_CHU_CAI = [
-  { chu: "A", doc: "ây",           viDu: "Apple",    nghia: "quả táo" },
-  { chu: "B", doc: "bi",           viDu: "Book",     nghia: "quyển sách" },
-  { chu: "C", doc: "xi",           viDu: "Cat",      nghia: "con mèo" },
-  { chu: "D", doc: "đi",           viDu: "Dog",      nghia: "con chó" },
-  { chu: "E", doc: "i",            viDu: "Egg",      nghia: "quả trứng" },
-  { chu: "F", doc: "ép",           viDu: "Fish",     nghia: "con cá" },
-  { chu: "G", doc: "gi",           viDu: "Girl",     nghia: "bé gái" },
-  { chu: "H", doc: "ết chờ",       viDu: "Hat",      nghia: "cái mũ" },
-  { chu: "I", doc: "ai",           viDu: "Ice",      nghia: "nước đá" },
-  { chu: "J", doc: "giây",         viDu: "Juice",    nghia: "nước ép" },
-  { chu: "K", doc: "kây",          viDu: "Key",      nghia: "chìa khóa" },
-  { chu: "L", doc: "eo",           viDu: "Lion",     nghia: "sư tử" },
-  { chu: "M", doc: "em",           viDu: "Milk",     nghia: "sữa" },
-  { chu: "N", doc: "en",           viDu: "Nose",     nghia: "cái mũi" },
-  { chu: "O", doc: "âu",           viDu: "Orange",   nghia: "quả cam" },
-  { chu: "P", doc: "pi",           viDu: "Pen",      nghia: "cây bút" },
-  { chu: "Q", doc: "kiu",          viDu: "Queen",    nghia: "nữ hoàng" },
-  { chu: "R", doc: "a, uốn lưỡi",  viDu: "Rain",     nghia: "mưa" },
-  { chu: "S", doc: "ét",           viDu: "Sun",      nghia: "mặt trời" },
-  { chu: "T", doc: "ti",           viDu: "Tree",     nghia: "cái cây" },
-  { chu: "U", doc: "diu",          viDu: "Umbrella", nghia: "cái ô" },
-  { chu: "V", doc: "vi",           viDu: "Van",      nghia: "xe tải nhỏ" },
-  { chu: "W", doc: "đắp bồ liu",   viDu: "Water",    nghia: "nước" },
-  { chu: "X", doc: "ích",          viDu: "Box",      nghia: "cái hộp" },
-  { chu: "Y", doc: "oai",          viDu: "Yellow",   nghia: "màu vàng" },
-  { chu: "Z", doc: "di",           viDu: "Zoo",      nghia: "sở thú" }
+  { chu: "A", viDu: "Apple",     nghia: "quả táo" },
+  { chu: "B", viDu: "Book",      nghia: "quyển sách" },
+  { chu: "C", viDu: "Cat",       nghia: "con mèo" },
+  { chu: "D", viDu: "Dog",       nghia: "con chó" },
+  { chu: "E", viDu: "Egg",       nghia: "quả trứng" },
+  { chu: "F", viDu: "Fish",      nghia: "con cá" },
+  { chu: "G", viDu: "Girl",      nghia: "bé gái" },
+  { chu: "H", viDu: "Hat",       nghia: "cái mũ" },
+  { chu: "I", viDu: "Ice",       nghia: "nước đá" },
+  { chu: "J", viDu: "Juice",     nghia: "nước ép" },
+  { chu: "K", viDu: "Key",       nghia: "chìa khóa" },
+  { chu: "L", viDu: "Lion",      nghia: "sư tử" },
+  { chu: "M", viDu: "Milk",      nghia: "sữa" },
+  { chu: "N", viDu: "Nose",      nghia: "cái mũi" },
+  { chu: "O", viDu: "Orange",    nghia: "quả cam" },
+  { chu: "P", viDu: "Pen",       nghia: "cây bút" },
+  { chu: "Q", viDu: "Queen",     nghia: "nữ hoàng" },
+  { chu: "R", viDu: "Rain",      nghia: "mưa" },
+  { chu: "S", viDu: "Sun",       nghia: "mặt trời" },
+  { chu: "T", viDu: "Tree",      nghia: "cái cây" },
+  { chu: "U", viDu: "Umbrella",  nghia: "cái ô" },
+  { chu: "V", viDu: "Van",       nghia: "xe tải nhỏ" },
+  { chu: "W", viDu: "Water",     nghia: "nước" },
+  { chu: "X", viDu: "Box",       nghia: "cái hộp" },
+  { chu: "Y", viDu: "Yellow",    nghia: "màu vàng" },
+  { chu: "Z", viDu: "Zoo",       nghia: "sở thú" }
 ];
 let viTriChu = 0;   // đang học chữ cái thứ mấy
 
@@ -240,10 +240,10 @@ function dsNguon(chu) {
 }
 
 /* Phát âm một từ tiếng Anh bằng bản thu từ điển; không có thì dùng giọng máy */
-function phatAmTuDien(chu) {
+function phatAmTuDien(chu, dsRieng) {
   dungPhatAm();
   const luot = luotPhat;
-  const ds = nguonTot[chu] ? [nguonTot[chu]] : dsNguon(chu);
+  const ds = nguonTot[chu] ? [nguonTot[chu]] : (dsRieng || dsNguon(chu));
   let i = 0;
 
   function thu() {
@@ -278,6 +278,18 @@ function phatAmTuDien(chu) {
 function tuPhatSau(chu, miliGiay) {
   clearTimeout(henGioPhat);
   henGioPhat = setTimeout(function () { phatAmTuDien(chu); }, miliGiay);
+}
+
+/* Phát âm tên một chữ cái bằng bản thu từ điển.
+   Riêng chữ A: mục "a" trong từ điển Oxford là mạo từ (đọc là "ờ"), không phải tên chữ cái,
+   nên chữ A lấy bản thu tên chữ cái ở kho Wikimedia. */
+function phatAmChuCai(chu) {
+  if (chu === "A") {
+    const wiki = "https://commons.wikimedia.org/wiki/Special:FilePath/En-us-";
+    phatAmTuDien("A", [wiki + "a.ogg", wiki + "A.ogg"]);
+  } else {
+    phatAmTuDien(chu);
+  }
 }
 
 /* Đọc từng chữ cái: mỗi chữ cái một nhịp, bằng giọng máy tiếng Anh */
@@ -456,7 +468,7 @@ function hienChuCai() {
   const tong = BANG_CHU_CAI.length;
   const laChuCuoi = (viTriChu === tong - 1);
 
-  /* Chữ cái và từ ví dụ hiện to trên màn hình; web tự phát âm bằng giọng tiếng Anh,
+  /* Chữ cái và từ ví dụ hiện to trên màn hình; web tự phát âm bằng bản thu từ điển,
      trình đọc màn hình không đọc hai dòng này. */
   manHinh.innerHTML =
     MO_KHOI + 'Chữ cái ' + (viTriChu + 1) + ' trên ' + tong + '.' +
@@ -465,21 +477,13 @@ function hienChuCai() {
         bocEn(muc.viDu) + '</span>' +
     '</div>' +
     '<button type="button" id="nut-pa-chu">Phát âm chữ cái</button> ' +
-    '<button type="button" id="nut-cach-doc">Nghe cách đọc</button> ' +
     '<button type="button" id="nut-pa-vi-du">Phát âm từ ví dụ</button> ' +
     '<button type="button" id="nut-nghia-vi-du">Nghe nghĩa từ ví dụ</button> ' +
     '<button type="button" id="nut-chu-tiep">' +
       (laChuCuoi ? 'Hết bảng chữ cái — học lại từ đầu' : 'Chữ cái tiếp theo') + '</button> ' +
     '<button type="button" id="nut-chon-bo">Về danh sách bộ từ</button>';
 
-  khiBam("nut-pa-chu", function () {
-    dungPhatAm();
-    phatAmAnh(muc.chu, true);
-  });
-  khiBam("nut-cach-doc", function () {
-    dungPhatAm();
-    docLen('Đọc gần giống: ' + muc.doc + '.');
-  });
+  khiBam("nut-pa-chu", function () { phatAmChuCai(muc.chu); });
   khiBam("nut-pa-vi-du", function () { phatAmTuDien(muc.viDu); });
   khiBam("nut-nghia-vi-du", function () {
     dungPhatAm();
@@ -493,7 +497,7 @@ function hienChuCai() {
 
   focusVao(document.getElementById("tieu-de-man"));
   /* Chờ máy đọc xong "Chữ cái ... trên ..." rồi tự phát âm chữ cái */
-  henGioPhat = setTimeout(function () { phatAmAnh(muc.chu, true); }, 1800);
+  henGioPhat = setTimeout(function () { phatAmChuCai(muc.chu); }, 1800);
 }
 
 /* ===== MENU CỦA MỘT BỘ TỪ ===== */
@@ -645,6 +649,7 @@ function hienLuuYBaiTap(batDau) {
 
   focusVao(document.getElementById("tieu-de-man"));
 }
+
 function batDauBaiTap(tron) {
   cheDoOnTap = false;
   dangTron = tron;
