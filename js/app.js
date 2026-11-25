@@ -645,7 +645,6 @@ function hienLuuYBaiTap(batDau) {
 
   focusVao(document.getElementById("tieu-de-man"));
 }
-
 function batDauBaiTap(tron) {
   cheDoOnTap = false;
   dangTron = tron;
